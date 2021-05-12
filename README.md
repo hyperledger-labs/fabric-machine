@@ -10,9 +10,20 @@ The Fabric Machine peer is targeted for a server with a network-attached FPGA ca
 
 For more details about Blockchain/Fabric Machine architecture, see the publications section [below](#publications).
 
+This repo provides a proof-of-concept implementation and is not meant for production use. The main goal is to engage the Hyperledger community in FPGA-based hardware acceleration, and to refine/improve the Fabric Machine peer based on community experience and feedback.
+
 _Stay tuned for more updates soon!_
 
 ## Publications
 - [[Paper](http://arxiv.org/abs/2104.06968)] H. Javaid, J. Yang, N. Santoso, M. Upadhyay, S. Mohan, C. Hu, G. Brebner. 2021. _Blockchain Machine: A Network-Attached Hardware Accelerator for Hyperledger Fabric_. arXiv:2104.06968.
 - [[Talk](https://www.youtube.com/watch?v=GoOYO_ju7mA)] H. Javaid. 2020. _Hyperledger Performance Improvements (Presentation, Demo and Discussion)_. Hyperledger Sydney Meetup.
 - [[Talk](https://www.youtube.com/watch?v=Nidw6zMR4hs)] S. Mohan. 2020. _Hyperledger Performance Improvements (Demo and Discussion)_. Hyperledger San Francisco Meetup.
+
+## Initial Committers
+- Ji Yang, Xilinx (https://github.com/yangji-xlnx)
+- Haris Javaid, Xilinx (https://github.com/harisj-xlnx)
+
+## Sponsors
+- Mark Wagner, Chair Performance and Scale Working Group (mwagner@redhat.com)
+- Vipin Bharathan, Hyperledger Labs Steward (vip@dlt.nyc)
+- David Boswell, Director of Ecosystem at Linux Foundation (dboswell@linuxfoundation.org)
