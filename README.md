@@ -12,6 +12,30 @@ For more details about Blockchain/Fabric Machine architecture, see the publicati
 
 This repo provides a proof-of-concept implementation and is not meant for production use. The main goal is to engage the Hyperledger community in FPGA-based hardware acceleration, and to refine/improve the Fabric Machine peer based on community experience and feedback.
 
+## How to Use
+Clone the original Hyperledger Fabric [repo](https://github.com/hyperledger/fabric), and then clone and merge this repo into the original one:
+
+```
+git clone https://github.com/hyperledger/fabric.git
+cd fabric && git checkout 11ff991 && cd ..
+git clone https://github.com/Xilinx/hyperledger-fabric.git
+cp -rf hyperledger-fabric/* fabric/.
+cd fabric
+```
+
+To compile the Fabric code and create dockers, run the following from the ``fabric`` directory:
+```
+# all images
+make docker-clean && make docker
+
+# only orderer image
+make orderer-docker-clean && make orderer-docker
+
+# only peer related images
+make ccenv-docker-clean && make ccenv
+make peer-docker-clean && make peer-docker
+```
+
 _Stay tuned for more updates soon!_
 
 ## Publications
