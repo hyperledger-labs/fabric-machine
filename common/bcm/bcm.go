@@ -3,7 +3,6 @@ Copyright Xilinx Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
 package bcm
 
 import (
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/flogging"
 	cb "github.com/hyperledger/fabric/protos/common"
 	"google.golang.org/grpc/metadata"
@@ -23,12 +23,14 @@ type HardwarePeer struct {
 	sync.RWMutex
 	address  string
 	blockNum uint64
+	protocol *BcmProtocol
 }
 
 // We skip the first block (block0 is generis block, block1 is chaincode instantiation block).
 var hwPeer = HardwarePeer{
 	address:  "192.55.0.54:49656",
 	blockNum: 1,
+	protocol: ConnectToPeer("0.0.0.0:49656", "192.55.0.54:49656", "/etc/hyperledger/blockchain-machine"),
 }
 
 // CheckPeerStructure checks if peer is a hardware based peer
@@ -83,15 +85,23 @@ func SendToHardware(ctx context.Context, block *cb.Block) {
 	hwPeer.Lock()
 	defer hwPeer.Unlock()
 
-	// update cache first
-	if block.Header.Number == 0 {
-		logger.Infof("Load certificates")
-		initCertificateCache()
-		read_config()
-		logger.Infof("Sync certificate with hw peer")
-		updateRemoteCertificateCache(hwPeer.address)
+	// disable protocol when hw peer is not configured
+	if hwPeer.protocol == nil {
 		return
 	}
+
+	// update cache first
+	// done automatically
+	/*
+		if block.Header.Number == 0 {
+			logger.Infof("Load certificates")
+			initCertificateCache()
+			read_config()
+			logger.Infof("Sync certificate with hw peer")
+			updateRemoteCertificateCache(hwPeer.address)
+			return
+		}
+	*/
 
 	// Make saure there are no configuration update blocks, otherwise CheckMessageData() below will
 	// fail and this function will be stuck here without sending any blocks.
@@ -130,6 +140,12 @@ func SendToHardware(ctx context.Context, block *cb.Block) {
 
 	// send block
 	logger.Infof("Sending block %d to hardware peer %s\n", block.Header.Number, addr)
-	SendBlock(addr, block)
+	block_data, err := proto.Marshal(block)
+	if err != nil {
+		logger.Errorf("bcm error: block serilization failed!")
+		return
+	}
+	//SendBlock(addr, block_data)
+	hwPeer.protocol.SendBlock(int64(block.Header.Number), block_data)
 	hwPeer.blockNum++
 }

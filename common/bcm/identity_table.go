@@ -79,7 +79,7 @@ func insertCertificate(id int, name string, ca []byte) (res int) {
 
 	sk := serializeCertificate(name, ca)
 	k := getCertificateId(sk)
-	if k > 0 {
+	if k >= 0 {
 		return -1 // ca existed
 	}
 
@@ -121,9 +121,6 @@ func installCertificateFile(path string, id int, name string) (ret int) {
 	return ret
 }
 
-// updateRemoteCertificateCache updates the remote peer with latest cache data
-func updateRemoteCertificateCache(addr string) {
-	for _, v := range CertificateCache {
-		sendCertificateCacheUpdate(addr, v.id, v.name, v.ca)
-	}
+func getCertificateCache() map[string]CertificateInfo {
+	return CertificateCache
 }
