@@ -18,8 +18,8 @@ type Organization struct {
 	}
 }
 
-// load_identity_table read certificates from config file and write to certificate table
-func load_identity_table(roles []string, organizations []Organization) (errno int) {
+// loadIdentityTable read certificates from config file and write to certificate table
+func loadIdentityTable(roles []string, organizations []Organization) (errno int) {
 	errno = 0
 	role_to_id := make(map[string]int)
 	for role_id, role := range roles {
@@ -40,20 +40,22 @@ func load_identity_table(roles []string, organizations []Organization) (errno in
 	return errno
 }
 
-// read_config reads config file and call related functions
-func read_config() {
-	viper.SetConfigName("fabric_machine")                 // name of config file (without extension)
-	viper.SetConfigType("yaml")                           // REQUIRED if the config file does not have the extension in the name
-	viper.AddConfigPath("/etc/hyperledger/fabricmachine") // path to look for the config file in
-	err := viper.ReadInConfig()                           // Find and read the config file
-	if err != nil {                                       // Handle errors reading the config file
-		logger.Errorf("Fatal error config file: %s \n", err)
-		return
+// readConfig reads config file and call related functions
+func readConfig(path string) int {
+	viper.SetConfigName("fabric_machine") // name of config file (without extension)
+	viper.SetConfigType("yaml")           // REQUIRED if the config file does not have the extension in the name
+	// FIXME: change this path with correct config path
+	viper.AddConfigPath(path)   // path to look for the config file in
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil {             // Handle errors reading the config file
+		logger.Errorf("Fatal error config file: %s %s\n", path, err)
+		return -1
 	}
 
 	roles := viper.GetStringSlice("Roles")
 	organizations := make([]Organization, 0)
 	viper.UnmarshalKey("Organizations", &organizations)
 
-	load_identity_table(roles, organizations)
+	loadIdentityTable(roles, organizations)
+	return 0
 }
