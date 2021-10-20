@@ -13,7 +13,8 @@ For more details about Blockchain/Fabric Machine architecture, see the publicati
 This repo provides a proof-of-concept implementation and is not meant for production use. The main goal is to engage the Hyperledger community in FPGA-based hardware acceleration, and to refine/improve the Fabric Machine peer based on community experience and feedback.
 
 ## How to Use
-Clone the original Hyperledger Fabric [repo](https://github.com/hyperledger/fabric), and then clone and merge this repo into the original one:
+### Repo Setup
+Clone the original Hyperledger Fabric [repo](https://github.com/hyperledger/fabric), and then clone and merge this repo into the original one.
 
 ```
 git clone https://github.com/hyperledger/fabric.git
@@ -22,23 +23,37 @@ git clone https://github.com/Xilinx/hyperledger-fabric.git
 cp -rf hyperledger-fabric/* fabric/.
 cd fabric
 ```
+ 
+To install the prerequisites, run the following from the ``fabric`` directory. Afterwards, reopen the terminal:
+```
+cd scripts
+./prereqs.sh  # needs sudo access
+```
 
 To compile the Fabric code and create dockers, run the following from the ``fabric`` directory:
 ```
-# all images
-make docker-clean && make docker
-
-# only orderer image
+# orderer image
 make orderer-docker-clean && make orderer-docker
 
-# only peer related images
+# peer related images
 make ccenv-docker-clean && make ccenv
 make peer-docker-clean && make peer-docker
+```
+
+### Smallbank Benchmark (Software-only Setup)
+The software-only setup of smallbank benchmark (from Caliper benchmarks) creates a Docker-based Fabric network on the localhost. The Fabric Machine peer is simulated/emulated in software, without real deployment on an FPGA card. The goal is to provide an easy setup and testing of Fabric Machine peer, and obtain quick estimate of speedup in block validation due to hardware acceleration.
+
+To run the benchmark:
+```
+cd samples/smallbank
+./setup_benchmark.sh  # one-time setup
+./run_benchmark.sh
 ```
 
 _Stay tuned for more updates soon!_
 
 ## Publications
+- [[Talk](https://wiki.hyperledger.org/display/PSWG/PSWG+July+27%2C+2021)] H. Javaid. 2021. _Blockchain Machine: Accelerating Validation Bottlenecks in Hyperledger Fabric_. Hyperledger Performance and Scale Working Group.
 - [[Paper](http://arxiv.org/abs/2104.06968)] H. Javaid, J. Yang, N. Santoso, M. Upadhyay, S. Mohan, C. Hu, G. Brebner. 2021. _Blockchain Machine: A Network-Attached Hardware Accelerator for Hyperledger Fabric_. arXiv:2104.06968.
 - [[Talk](https://www.youtube.com/watch?v=GoOYO_ju7mA)] H. Javaid. 2020. _Hyperledger Performance Improvements (Presentation, Demo and Discussion)_. Hyperledger Sydney Meetup.
 - [[Talk](https://www.youtube.com/watch?v=Nidw6zMR4hs)] S. Mohan. 2020. _Hyperledger Performance Improvements (Demo and Discussion)_. Hyperledger San Francisco Meetup.
@@ -48,6 +63,6 @@ _Stay tuned for more updates soon!_
 - Haris Javaid, Xilinx (https://github.com/harisj-xlnx)
 
 ## Sponsors
-- Mark Wagner, Chair Performance and Scale Working Group (mwagner@redhat.com)
+- Mark Wagner, Red Hat (mwagner@redhat.com)
 - Vipin Bharathan, Hyperledger Labs Steward (vip@dlt.nyc)
 - David Boswell, Director of Ecosystem at Linux Foundation (dboswell@linuxfoundation.org)
