@@ -1,0 +1,145 @@
+# Copyright Xilinx Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# This file contains the Fabric network config for Caliper.
+
+name: Fabric
+version: "1.0"
+mutual-tls: false
+
+caliper:
+  blockchain: fabric
+  command:
+    start: "rm -rf /tmp/hfc-*"
+
+info:
+  Version: 1.4.5
+  Size: 2 Orgs with 2 Peers
+  Orderer: Raft Solo
+  Distribution: Local Host
+  StateDB: leveldb
+
+clients:
+  client0.org1.example.com:
+    client:
+      organization: Org1
+      credentialStore:
+        path: /tmp/hfc-kvs/org1
+        cryptoStore:
+          path: /tmp/hfc-cvs/org1
+      clientPrivateKey:
+        path: crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/keystore/key.pem
+      clientSignedCert:
+        path: crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem
+
+  client0.org2.example.com:
+    client:
+      organization: Org2
+      credentialStore:
+        path: /tmp/hfc-kvs/org2
+        cryptoStore:
+          path: /tmp/hfc-cvs/org2
+      clientPrivateKey:
+        path: crypto-config/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/keystore/key.pem
+      clientSignedCert:
+        path: crypto-config/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/signcerts/User1@org2.example.com-cert.pem
+
+channels:
+  mychannel:
+    configBinary: mychannel.tx
+    created: false
+    orderers:
+    - orderer0.example.com
+    peers:
+      peer0.org1.example.com:
+        eventSource: true
+      peer1.org1.example.com:
+        eventSource: true
+      peer0.org2.example.com:
+        eventSource: true
+      peer1.org2.example.com:
+        eventSource: true
+
+    chaincodes:
+    - id: smallbank
+      version: v0
+      language: golang
+      path: chaincode/go
+      targetPeers:  # Enforce the following to be the only endorsing peers.
+      - peer0.org1.example.com
+      - peer0.org2.example.com
+      # By default, the policy is n-of-n where n is the number of organizations.
+
+organizations:
+  Org1:
+    mspid: Org1MSP
+    peers:
+    - peer0.org1.example.com
+    - peer1.org1.example.com
+    certificateAuthorities:
+    - ca.org1.example.com
+    adminPrivateKey:
+      path: crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/key.pem
+    signedCert:
+      path: crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem
+
+  Org2:
+    mspid: Org2MSP
+    peers:
+    - peer0.org2.example.com
+    - peer1.org2.example.com
+    certificateAuthorities:
+    - ca.org2.example.com
+    adminPrivateKey:
+      path: crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/key.pem
+    signedCert:
+      path: crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/Admin@org2.example.com-cert.pem
+
+orderers:
+  orderer0.example.com:
+    url: grpc://127.0.0.1:7050
+    grpcOptions:
+      ssl-target-name-override: orderer0.example.com
+
+peers:
+  peer0.org1.example.com:
+    url: grpc://127.0.0.1:7051
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.example.com
+      grpc.keepalive_time_ms: 600000
+
+  peer1.org1.example.com:
+    url: grpc://127.0.0.1:8051
+    grpcOptions:
+      ssl-target-name-override: peer1.org1.example.com
+      grpc.keepalive_time_ms: 600000
+
+  peer0.org2.example.com:
+    url: grpc://127.0.0.1:10051
+    grpcOptions:
+      ssl-target-name-override: peer0.org2.example.com
+      grpc.keepalive_time_ms: 600000
+
+  peer1.org2.example.com:
+    url: grpc://127.0.0.1:11051
+    grpcOptions:
+      ssl-target-name-override: peer1.org2.example.com
+      grpc.keepalive_time_ms: 600000
+
+certificateAuthorities:
+  ca.org1.example.com:
+    url: http://127.0.0.1:7054
+    httpOptions:
+      verify: false
+    registrar:
+    - enrollId: admin
+      enrollSecret: adminpw
+
+  ca.org2.example.com:
+    url: http://127.0.0.1:8054
+    httpOptions:
+      verify: false
+    registrar:
+    - enrollId: admin
+      enrollSecret: adminpw
