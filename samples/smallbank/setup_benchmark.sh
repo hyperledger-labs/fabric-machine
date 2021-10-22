@@ -8,7 +8,7 @@
 # run_benchmark.sh or when benchmark needs to be updated.
 set -e
 
-caliper_benchmarks_dir=$(realpath /tmp/caliper-benchmarks)
+caliper_benchmarks_dir=/tmp/caliper-benchmarks
 benchmark_dir=$(realpath .)
 benchmark=$(basename $benchmark_dir)
 chaincode_dir=src/chaincode/go

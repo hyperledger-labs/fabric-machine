@@ -32,6 +32,10 @@ cd scripts
 
 To compile the Fabric code and create dockers, run the following from the ``fabric`` directory:
 ```
+# One-time setup
+dep ensure
+go get -u github.com/golang/dep
+
 # orderer image
 make orderer-docker-clean && make orderer-docker
 
