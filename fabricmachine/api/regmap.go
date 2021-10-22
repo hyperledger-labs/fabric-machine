@@ -6,14 +6,14 @@ SPDX-License-Identifier: Apache-2.0
 
 // regmap.go implements Fabric machine's register map and providies utilities to read/write the
 // registers.
-package fabricmachine
+package fmapi
 
 import (
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/hyperledger/fabric/common/fabricmachine/pcieutil"
+	"github.com/hyperledger/fabric/fabricmachine/pcieutil"
 )
 
 const (

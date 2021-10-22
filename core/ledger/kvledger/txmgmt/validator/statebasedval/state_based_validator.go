@@ -11,32 +11,32 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hyperledger/fabric/common/fabricmachine"
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/statedb"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/validator/internal"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/version"
+	"github.com/hyperledger/fabric/fabricmachine/api"
 	"github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset"
 	"github.com/hyperledger/fabric/protos/peer"
 )
 
 var logger = flogging.MustGetLogger("statebasedval")
-var fabmac *fabricmachine.FabricMachine
+var fabmac *fmapi.FabricMachine
 
 func InitFabricMachine() error {
-	if !fabricmachine.IsEnabled() {
+	if !fmapi.IsEnabled() {
 		return nil
 	}
 
 	var err error
-	fabmac, err = fabricmachine.NewFabricMachine(fabricmachine.GetPcieResourceFile())
+	fabmac, err = fmapi.NewFabricMachine(fmapi.GetPcieResourceFile())
 	return err
 }
 
 func CloseFabricMachine() {
-	if !fabricmachine.IsEnabled() {
+	if !fmapi.IsEnabled() {
 		return
 	}
 	fabmac.Close()
@@ -111,7 +111,7 @@ func (v *Validator) preLoadCommittedVersionOfRSet(block *internal.Block) error {
 
 // ValidateAndPrepareBatch implements method in Validator interface
 func (v *Validator) ValidateAndPrepareBatch(block *internal.Block, doMVCCValidation bool) (*internal.PubAndHashUpdates, error) {
-	hwEnabled := fabricmachine.IsEnabled()
+	hwEnabled := fmapi.IsEnabled()
 	updates := internal.NewPubAndHashUpdates()
 
 	// Skip mvcc when hardware is used since its handled in hardware.

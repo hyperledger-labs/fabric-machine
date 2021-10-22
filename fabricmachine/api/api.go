@@ -4,9 +4,9 @@ Copyright Xilinx Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-// Package fabricmachine provides the interface to interact with the Fabric machine (hardware
+// Package fmapi provides the interface to interact with the Fabric machine (hardware
 // accelerators implemented on an FPGA board, accessed through PCIe).
-package fabricmachine
+package fmapi
 
 import (
 	"fmt"

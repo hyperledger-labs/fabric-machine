@@ -22,8 +22,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/common/channelconfig"
-	"github.com/hyperledger/fabric/common/fabricmachine"
 	"github.com/hyperledger/fabric/common/flogging"
+	"github.com/hyperledger/fabric/fabricmachine/api"
 	mspmgmt "github.com/hyperledger/fabric/msp/mgmt"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/msp"
@@ -382,7 +382,7 @@ func ValidateTransaction(e *common.Envelope, c channelconfig.ApplicationCapabili
 		return nil, pb.TxValidationCode_NIL_ENVELOPE
 	}
 
-	hwEnabled := fabricmachine.IsEnabled()
+	hwEnabled := fmapi.IsEnabled()
 
 	// get the payload from the envelope
 	payload, err := utils.GetPayload(e)
