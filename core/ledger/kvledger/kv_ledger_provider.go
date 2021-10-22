@@ -12,7 +12,6 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric/common/fabricmachine"
 	"github.com/hyperledger/fabric/common/ledger/util/leveldbhelper"
 	"github.com/hyperledger/fabric/core/ledger"
 	"github.com/hyperledger/fabric/core/ledger/confighistory"
@@ -22,6 +21,7 @@ import (
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate"
 	"github.com/hyperledger/fabric/core/ledger/ledgerconfig"
 	"github.com/hyperledger/fabric/core/ledger/ledgerstorage"
+	"github.com/hyperledger/fabric/fabricmachine/api"
 	"github.com/hyperledger/fabric/protos/common"
 	"github.com/hyperledger/fabric/protos/utils"
 	"github.com/pkg/errors"
@@ -70,7 +70,7 @@ func NewProvider() (ledger.PeerLedgerProvider, error) {
 			" wait for that command to complete its execution or terminate it before retrying")
 	}
 
-	if err := fabricmachine.InitConfig(); err != nil {
+	if err := fmapi.InitConfig(); err != nil {
 		return nil, err
 	}
 

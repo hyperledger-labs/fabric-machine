@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 // config.go implements utilities to read Fabric machine's configuration data.
-package fabricmachine
+package fmapi
 
 import (
 	"fmt"
