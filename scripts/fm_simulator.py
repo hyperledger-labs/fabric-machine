@@ -271,11 +271,11 @@ def write_block_info(peer_log, block_stats):
     block_txs = block_stats['txs']
 
     peer_log.write('.....{0} ... START Block Validation for block [{1}]\n'.format(
-        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'), block_num))
+        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC'), block_num))
     peer_log.write('.....{0} ... Validated block [{1}] in 0us\n'.format(
-        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'), block_num))
+        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC'), block_num))
     peer_log.write('.....{0} ... Block [{1}] transaction validation flags: '.format(
-        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'), block_num))
+        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC'), block_num))
 
     words = block_txs // 32
     first_word = block_txs - (32 * words)
@@ -285,7 +285,7 @@ def write_block_info(peer_log, block_stats):
 
     peer_log.write(('\n.....{0} ... Committed block [{1}] with {2} transaction(s) in {3}us '
         '(state_validation=0us block_and_pvtdata_commit=0us state_commit=0us)\n\n').format(
-        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'), block_num, block_stats['txs'], block_stats['latency']))
+        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC'), block_num, block_stats['txs'], block_stats['latency']))
 
 
 # Generates input for simulation based on the provided parameters.
