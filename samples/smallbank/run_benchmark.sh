@@ -8,7 +8,7 @@
 # before running this script.
 set -e
 
-scripts_dir=$(realpath ../../scripts)
+scripts_dir=$(realpath ../../scripts/fabric)
 caliper_dir=$(realpath ../../caliper-cli)
 benchmark_dir=$(realpath .)
 benchmark=$(basename $benchmark_dir)
