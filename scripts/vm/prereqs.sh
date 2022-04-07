@@ -7,6 +7,24 @@
 # This script installs all the prerequisites for this repo.
 set -e
 
+# Install some basic utilities.
+sudo apt-get update -qq
+sudo apt-get install -y \
+    apt-transport-https \
+    build-essential \
+    ca-certificates \
+    curl \
+    g++ \
+    git \
+    gnupg \
+    jq \
+    libtool \
+    make \
+    nfs-common \
+    python \
+    sshfs \
+    unzip
+
 sudo ./install_golang.sh $USER
 sudo ./install_docker.sh $USER
 
@@ -31,5 +49,6 @@ echo "Installing Caliper CLI ..."
 echo "================================================="
 caliper_dir=$(realpath ../caliper-cli)
 mkdir -p $caliper_dir && cd $caliper_dir
+npm init -y
 npm install --only=prod @hyperledger/caliper-cli@0.3.2
 npx caliper bind --caliper-bind-sut fabric:1.4.5

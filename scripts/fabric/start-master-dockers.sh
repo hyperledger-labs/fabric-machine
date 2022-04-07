@@ -11,6 +11,12 @@ set -e
 DOCKER_COMPOSE_FILE=$1
 DOCKERS=$2
 
+# If the IP address for docker swarm network is not provided, then assume that all the dockers 
+# will be run locally.
+if [ -z "$HLNETWORK_IP_ADDRESS" ]; then
+    HLNETWORK_IP_ADDRESS=127.0.0.1
+fi
+
 printf "\n=== Setting up dockers in $HOSTNAME $HLNETWORK_IP_ADDRESS ===\n\n"
 
 docker swarm init --advertise-addr $HLNETWORK_IP_ADDRESS

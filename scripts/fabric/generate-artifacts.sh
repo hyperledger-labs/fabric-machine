@@ -16,7 +16,7 @@ BENCHMARK=$1
 # Local variables.
 [ -z "$BENCHMARK" ] && echo "Please specify benchmark as the first command-line parameter." && exit
 scripts_dir=$(dirname $(realpath $0))
-benchmark_dir=$scripts_dir/../samples/$BENCHMARK
+benchmark_dir=$scripts_dir/../../samples/$BENCHMARK
 cd $benchmark_dir
 
 # Download Fabric binaries if not available in bin directory.
