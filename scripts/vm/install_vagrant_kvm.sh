@@ -14,7 +14,7 @@ fi
 
 
 while true; do
-    read -p "Do you still want to continue with installation of vagrant and libvirt/kvm (sudo access needed)? " ans
+    read -p "Do you want to continue with installation of vagrant and libvirt/kvm (sudo access needed)? " ans
     case $ans in
         [Yy]* ) break;;
         [Nn]* ) exit;;

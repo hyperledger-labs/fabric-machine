@@ -126,7 +126,7 @@ def start_master_vm(vm, hostname, port, docker_compose_file, dockers):
 #   port (string): ssh port
 #   docker_swarm_join_cmd (string): command to join the docker swarm
 #   docker_compose_file (string): the docker compose file with docker configurations
-#   dockers (string): space-separated list of dockers to stop
+#   dockers (string): space-separated list of dockers to start
 #
 # Returns:
 #   a string containing the output of the ssh operation
@@ -148,16 +148,17 @@ def start_slave_vm(vm, hostname, port, docker_swarm_join_cmd, docker_compose_fil
 #   vm (string): name of the VM
 #   hostname (string): IP address of the VM
 #   port (string): ssh port
+#   dockers (string): space-separated list of dockers to stop
 #
 # Returns:
 #   a string containing the output of the ssh operation
-def stop_vm(vm, hostname, port):
+def stop_vm(vm, hostname, port, dockers):
     if vm == 'localhost':
         ssh_cmd = ''
-        script_cmd = '{script_dir}/stop-dockers.sh'.format(script_dir=SCRIPT_DIR)
+        script_cmd = '{script_dir}/stop-dockers.sh "{dockers}"'.format(script_dir=SCRIPT_DIR, dockers=dockers)
     else:
         ssh_cmd = SSH_CMD.format(key=get_ssh_key(vm), hostname=hostname, port=port)
-        script_cmd = '\'bash -ls\' < {script_dir}/stop-dockers.sh'.format(script_dir=SCRIPT_DIR)
+        script_cmd = '\'bash -ls\' < {script_dir}/stop-dockers.sh \'"{dockers}"\''.format(script_dir=SCRIPT_DIR, dockers=dockers)
     return run_cmd(ssh_cmd + ' ' + script_cmd, 1)
 
 # Gets logs of all the dockers after ssh'ing into the VM.
@@ -259,7 +260,7 @@ if __name__ == '__main__':
         vm_name = vm['name']
 
         if args.mode == "stop" or args.mode == "restart":
-            stop_vm(vm_name, vm['ip'], port)
+            stop_vm(vm_name, vm['ip'], port, vm['dockers'])
 
         if args.mode == "log":
             log_dir = os.path.dirname(docker_compose_file)

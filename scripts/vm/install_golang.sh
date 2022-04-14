@@ -4,30 +4,65 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-set -e
 
 # Command-line parameters.
-GO_USER=$1
+if [[ -n "$1" ]]; then
+    GO_USER=$1
+else
+    GO_USER=$USER
+fi
+if [[ -n "$2" ]]; then
+    GO_VER=$2
+else
+    GO_VER=1.14.12
+fi
+if [[ -n "$3" ]]; then
+    GOROOT=$3
+else
+    GOROOT=/opt/go
+fi
+if [[ -n "$4" ]]; then
+    GOPATH=$4
+else
+    GOPATH=/opt/gopath
+fi
 
-goroot="/opt/go"
-gopath="/opt/gopath"
-go_version=1.14.12
+out=$(go version)
+if [[ $? -eq 0 ]]; then
+    go env
+    echo "Go is already installed"
+fi
+
+set -e
+
+while true; do
+    echo "Do you want to continue with installation of Go ${GO_VER} for user ${GO_USER} with GOROOT=$GOROOT GOPATH=$GOPATH "
+    read -p "(sudo access needed for go-dep installation and updates .bashrc with Go paths) ? " ans
+    case $ans in
+        [Yy]* ) break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+mkdir -p $GOROOT $GOPATH
+chown -R ${GO_USER}:${GO_USER} $GOROOT $GOPATH
 
 echo "================================================="
-echo "Installing Go ${go_version} ..."
+echo "Installing Go ${GO_VER} ..."
 echo "================================================="
-go_url=https://storage.googleapis.com/golang/go${go_version}.linux-amd64.tar.gz
-mkdir -p $goroot
-curl -sL "$go_url" | (cd $goroot && tar --strip-components 1 -xz)
-apt-get install -y go-dep
-chown -R ${GO_USER}:${GO_USER} $goroot/
+go_url=https://storage.googleapis.com/golang/go${GO_VER}.linux-amd64.tar.gz
+curl -sL "$go_url" | (cd $GOROOT && tar --strip-components 1 -xz)
+sudo apt-get install -y go-dep
 
-mkdir -p $gopath/src/github.com
-chown ${GO_USER}:${GO_USER} $gopath $gopath/src/github.com
 cat <<EOF >> /home/${GO_USER}/.bashrc
 
-export GOROOT=$goroot
-export GOPATH=$gopath
-export PATH=$goroot/bin:\$PATH
+export GOROOT=$GOROOT
+export GOPATH=$GOPATH
+export PATH=$GOROOT/bin:\$PATH
 
 EOF
+
+echo "================================================="
+echo "Go $GO_VER for user $GO_USER with GOROOT=$GOROOT GOPATH=$GOPATH installed successfully!"
+echo "================================================="
