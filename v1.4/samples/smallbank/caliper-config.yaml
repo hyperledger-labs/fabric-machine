@@ -15,7 +15,7 @@ test:
     number: 4
   rounds:
   - label: randomtransactions
-    txNumber: 20000
+    txNumber: 3000
     rateControl:
       type: fixed-rate
       opts:
