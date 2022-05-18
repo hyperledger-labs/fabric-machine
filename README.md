@@ -98,6 +98,17 @@ The commit latency/throughput with ledger_write executes the ledger_write operat
 
 [1] C. Gorenflo et al. 2019. _FastFabric: Scaling Hyperledger Fabric to 20,000 Transactions per Second_. IEEE International Conference on Blockchain and Cryptocurrency (ICBC).
 
+### Smallbank Benchmark (Hardware/Software Setup)
+To setup a Fabric Machine peer, you will need the following hardware setup:
+- Server1 with 100G NIC card
+- Server2 with Xilinx Alveo U250 FPGA card
+- A direct 100G connection between server1 and server2, or the connection can be through a 100G switch (use port0 of Alveo U250 card which is the top QSFP port away from the PCIe slot)
+- A USB/JTAG cable from server1 to Alveo U250 FPGA card (used for programming the FPGA card)
+
+The FPGA card in server2 needs to be programmed with a bitstream generated from Fabric Machine hardware. Server1 will run the orderer while server2 will run the Fabric Machine peer, so server1 will send blocks to server2. 
+
+Please reach out to us for the bitstream and more details on/help with this setup. We plan to make this setup available in [Heterogeneous Accelerated Compute Cluster (HACC) at National University of Singapore (NUS)](https://xilinx.github.io/xacc/nus.html) so that the community can try Fabric Machine peer with ease. Stay tuned for more updates!
+
 ## Publications
 - [[Talk](https://wiki.hyperledger.org/display/PSWG/PSWG+July+27%2C+2021)] H. Javaid. 2021. _Blockchain Machine: Accelerating Validation Bottlenecks in Hyperledger Fabric_. Hyperledger Performance and Scale Working Group.
 - [[Paper](http://arxiv.org/abs/2104.06968)] H. Javaid, J. Yang, N. Santoso, M. Upadhyay, S. Mohan, C. Hu, G. Brebner. 2021. _Blockchain Machine: A Network-Attached Hardware Accelerator for Hyperledger Fabric_. arXiv:2104.06968.
