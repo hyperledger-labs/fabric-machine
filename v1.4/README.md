@@ -72,8 +72,14 @@ cd samples/smallbank
 ./run_benchmark.sh
 ```
 
+If you want to set up the benchmark from scratch by cleaning the working directory, then use:
+```
+./clean_benchmark.sh -l
+./setup_benchamrk.sh
+```
+
 ## Expected Output
-The script will print statistics for each of the peers in Fabric network. The most important metric reported is the commit latency/throughput with and without ledger_write operation. Since ledger_write operation is executed in software in both vanilla Fabric peer and Fabric Machine peer, a direct comparison should be between commit latency/throughput without ledger_write operation. For example, in the sample output below, we observe a huge improvement in commit throughput with Fabric Machine peer (1,019 --> 18,220 tps). 
+The script will print statistics for each of the peers in Fabric network. The most important metric reported is the commit latency/throughput with and without ledger_write operation. Since ledger_write operation is executed in software in both vanilla Fabric peer and Fabric Machine peer, a direct comparison should be between commit latency/throughput without ledger_write operation. For example, in the sample output below, we observe a huge improvement in commit throughput with Fabric Machine peer (18,220 tps vs 1,019 tps). 
 
 ```
 INFO: peer0.org1.example.com -- transactions (succeeded/total) = 1830/2028
