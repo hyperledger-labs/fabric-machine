@@ -1,0 +1,36 @@
+# Copyright Xilinx Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# This vagrantfile creates a VM that is capable of building and testing Hyperledger Fabric codebase.
+
+vms = {
+	"fm-vm" => {:cpus => 8, :mem_per_cpu => 2048, :hdisk => 20480, :hlnetwork_ip => "192.168.35.40"}
+}
+
+# create_vm creates a VM based on the parameters passed to it.
+def create_vm (machine, vm_name, vm_info)
+	machine.vm.box = "generic/ubuntu1804"
+	machine.vm.hostname = vm_name
+
+	machine.vm.provider :libvirt do |kvm|
+		kvm.default_prefix = "#{ENV['USER']}-"
+		kvm.cpus = vm_info[:cpus]
+		kvm.memory = vm_info[:mem_per_cpu] * vm_info[:cpus]
+	end
+
+	# NAT network interface
+	machine.vm.network :private_network, ip: "#{vm_info[:hlnetwork_ip]}"
+
+	# Provision the VM
+	machine.vm.provision "provision_vm", type: "shell", path: "provision_vm.sh", args: ["vagrant"]
+end
+
+Vagrant.require_version ">= 1.7.4"
+Vagrant.configure('2') do |config|
+	vms.each do |(vm_name, vm_info)|
+		config.vm.define vm_name do |machine|
+			create_vm(machine, vm_name, vm_info)
+		end
+	end
+end

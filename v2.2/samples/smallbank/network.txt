@@ -1,0 +1,9 @@
+#vm_name => dockers
+localhost => cli.example.com
+
+localhost => orderer0.example.com
+
+localhost => ca.org1.example.com ca.org2.example.com
+
+localhost => peer0.org1.example.com peer1.org1.example.com
+localhost => peer0.org2.example.com peer1.org2.example.com
