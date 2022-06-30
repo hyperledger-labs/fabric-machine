@@ -10,7 +10,9 @@ set -e
 LOG_DIR=$1
 DOCKERS=$2
 
-for docker in $DOCKERS; do
-    printf "\n=== Getting docker $docker log from $HOSTNAME $HLNETWORK_IP_ADDRESS ===\n\n"
-    docker logs $docker 1>$LOG_DIR/$docker.log 2>&1
+printf "\n=== Getting docker logs from $HOSTNAME $HLNETWORK_IP_ADDRESS ===\n\n"
+for d in $DOCKERS; do
+    echo $d
+    docker logs $d 1>$LOG_DIR/$d.log 2>&1
 done
+echo ""

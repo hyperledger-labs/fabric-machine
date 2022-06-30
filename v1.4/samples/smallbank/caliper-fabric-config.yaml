@@ -65,7 +65,7 @@ channels:
     - id: smallbank
       version: v0
       language: golang
-      path: chaincode/go
+      path: chaincode/smallbank/go/v1
       targetPeers:  # Enforce the following to be the only endorsing peers.
       - peer0.org1.example.com
       - peer0.org2.example.com

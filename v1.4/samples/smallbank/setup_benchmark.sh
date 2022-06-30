@@ -11,7 +11,7 @@ set -e
 caliper_benchmarks_dir=/tmp/caliper-benchmarks
 benchmark_dir=$(realpath .)
 benchmark=$(basename $benchmark_dir)
-chaincode_dir=src/chaincode/go
+chaincode_dir=src/chaincode/$benchmark/go/v1
 
 echo "================================================="
 echo "Pulling prebuilt docker images ..."
