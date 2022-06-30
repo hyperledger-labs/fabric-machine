@@ -18,7 +18,6 @@ import (
 	"github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric/bccsp"
-	"github.com/hyperledger/fabric/cached"
 	"github.com/hyperledger/fabric/common/flogging"
 	commonledger "github.com/hyperledger/fabric/common/ledger"
 	"github.com/hyperledger/fabric/common/ledger/blkstorage"
@@ -447,7 +446,6 @@ func (l *kvLedger) NewHistoryQueryExecutor() (ledger.HistoryQueryExecutor, error
 // CommitLegacy commits the block and the corresponding pvt data in an atomic operation
 func (l *kvLedger) CommitLegacy(pvtdataAndBlock *ledger.BlockAndPvtData, commitOpts *ledger.CommitOptions) error {
 	var err error
-	var elapsedBlockstorageAndPvtdataCommit, elapsedCommitState time.Duration
 	block := pvtdataAndBlock.Block
 	blockNo := pvtdataAndBlock.Block.Header.Number
 
@@ -479,7 +477,6 @@ func (l *kvLedger) CommitLegacy(pvtdataAndBlock *ledger.BlockAndPvtData, commitO
 	}
 	l.printTxsFilter(block)
 	elapsedBlockProcessing := time.Since(startBlockProcessing)
-	logger.Infof("Finished block [%d] state validation in %dus", blockNo, elapsedBlockProcessing/time.Microsecond)
 
 	startBlockstorageAndPvtdataCommit := time.Now()
 	logger.Debugf("[%s] Adding CommitHash to the block [%d]", l.ledgerID, blockNo)
@@ -490,38 +487,20 @@ func (l *kvLedger) CommitLegacy(pvtdataAndBlock *ledger.BlockAndPvtData, commitO
 		l.addBlockCommitHash(pvtdataAndBlock.Block, updateBatchBytes)
 	}
 
-	// create go routines for ledger and statedb write if enabled
-	if commitOpts.LedgerStateDBParallelCommit {
-		go func() {
-			if err = l.commitToPvtAndBlockStore(pvtdataAndBlock); err != nil {
-				logger.Errorf("Failed to commit to ledger: %v", err)
-			}
-			elapsedBlockstorageAndPvtdataCommit = time.Since(startBlockstorageAndPvtdataCommit)
-			logger.Infof("[%s] Committed pvtdata and block [%d] to ledger in %dus", l.ledgerID, blockNo, elapsedBlockstorageAndPvtdataCommit/time.Microsecond)
-		}()
-
-		go func() {
-			startCommitState := time.Now()
-			if err = l.txmgr.Commit(); err != nil {
-				panic(errors.WithMessage(err, "error during commit to txmgr"))
-			}
-			elapsedCommitState = time.Since(startCommitState)
-			logger.Infof("[%s] Committed block [%d] to state database in %dus", l.ledgerID, blockNo, elapsedCommitState/time.Microsecond)
-		}()
-	} else {
-		logger.Debugf("[%s] Committing pvtdata and block [%d] to storage", l.ledgerID, blockNo)
-		if err = l.commitToPvtAndBlockStore(pvtdataAndBlock); err != nil {
-			return err
-		}
-		elapsedBlockstorageAndPvtdataCommit = time.Since(startBlockstorageAndPvtdataCommit)
-
-		startCommitState := time.Now()
-		logger.Debugf("[%s] Committing block [%d] transactions to state database", l.ledgerID, blockNo)
-		if err = l.txmgr.Commit(); err != nil {
-			panic(errors.WithMessage(err, "error during commit to txmgr"))
-		}
-		elapsedCommitState = time.Since(startCommitState)
+	logger.Debugf("[%s] Committing pvtdata and block [%d] to storage", l.ledgerID, blockNo)
+	l.blockAPIsRWLock.Lock()
+	defer l.blockAPIsRWLock.Unlock()
+	if err = l.commitToPvtAndBlockStore(pvtdataAndBlock); err != nil {
+		return err
 	}
+	elapsedBlockstorageAndPvtdataCommit := time.Since(startBlockstorageAndPvtdataCommit)
+
+	startCommitState := time.Now()
+	logger.Debugf("[%s] Committing block [%d] transactions to state database", l.ledgerID, blockNo)
+	if err = l.txmgr.Commit(); err != nil {
+		panic(errors.WithMessage(err, "error during commit to txmgr"))
+	}
+	elapsedCommitState := time.Since(startCommitState)
 
 	// History database could be written in parallel with state and/or async as a future optimization,
 	// although it has not been a bottleneck...no need to clutter the log with elapsed duration.
@@ -532,23 +511,15 @@ func (l *kvLedger) CommitLegacy(pvtdataAndBlock *ledger.BlockAndPvtData, commitO
 		}
 	}
 
-	if commitOpts.LedgerStateDBParallelCommit {
-		logger.Infof("[%s] Committed block [%d] with %d transaction(s) asynchronously in %dus commitHash=[%x]",
-			l.ledgerID, block.Header.Number, len(block.Data.Data),
-			time.Since(startBlockProcessing)/time.Microsecond,
-			l.commitHash,
-		)
-	} else {
-		logger.Infof("[%s] Committed block [%d] with %d transaction(s) in %dus (state_validation=%dus block_and_pvtdata_commit=%dus state_commit=%dus)"+
-			" commitHash=[%x]",
-			l.ledgerID, block.Header.Number, len(block.Data.Data),
-			time.Since(startBlockProcessing)/time.Microsecond,
-			elapsedBlockProcessing/time.Microsecond,
-			elapsedBlockstorageAndPvtdataCommit/time.Microsecond,
-			elapsedCommitState/time.Microsecond,
-			l.commitHash,
-		)
-	}
+	logger.Infof("[%s] Committed block [%d] with %d transaction(s) in %dus (state_validation=%dus block_and_pvtdata_commit=%dus state_commit=%dus)"+
+		" commitHash=[%x]",
+		l.ledgerID, block.Header.Number, len(block.Data.Data),
+		time.Since(startBlockProcessing)/time.Microsecond,
+		elapsedBlockProcessing/time.Microsecond,
+		elapsedBlockstorageAndPvtdataCommit/time.Microsecond,
+		elapsedCommitState/time.Microsecond,
+		l.commitHash,
+	)
 	l.updateBlockStats(
 		elapsedBlockProcessing,
 		elapsedBlockstorageAndPvtdataCommit,
@@ -562,7 +533,7 @@ func (l *kvLedger) CommitLegacy(pvtdataAndBlock *ledger.BlockAndPvtData, commitO
 // where tx0 is the least-significant bit.
 // NOTE: This function can also use the TxStatInfo array returned by ValidateAndPrepare() called in
 // the CommitWithPvtData() above.
-func (l *kvLedger) printTxsFilter(block *cached.Block) {
+func (l *kvLedger) printTxsFilter(block *common.Block) {
 	txsFilter := txflags.ValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
 	var str strings.Builder
 	res := uint32(0)
@@ -581,19 +552,11 @@ func (l *kvLedger) printTxsFilter(block *cached.Block) {
 }
 
 func (l *kvLedger) commitToPvtAndBlockStore(blockAndPvtdata *ledger.BlockAndPvtData) error {
-	var pvtdataStoreHt uint64
-	blockNum := blockAndPvtdata.Block.Header.Number
-
-	// Lock can only be acquired if previous block has been committed to ledger
-	for {
-		l.blockAPIsRWLock.Lock()
-		pvtdataStoreHt, _ := l.pvtdataStore.LastCommittedBlockHeight()
-		if pvtdataStoreHt == blockNum {
-			break
-		}
-		l.blockAPIsRWLock.Unlock()
+	pvtdataStoreHt, err := l.pvtdataStore.LastCommittedBlockHeight()
+	if err != nil {
+		return err
 	}
-	defer l.blockAPIsRWLock.Unlock()
+	blockNum := blockAndPvtdata.Block.Header.Number
 
 	if !l.isPvtstoreAheadOfBlkstore.Load().(bool) {
 		logger.Debugf("Writing block [%d] to pvt data store", blockNum)
@@ -614,7 +577,7 @@ func (l *kvLedger) commitToPvtAndBlockStore(blockAndPvtdata *ledger.BlockAndPvtD
 		logger.Debugf("Skipping writing pvtData to pvt block store as it ahead of the block store")
 	}
 
-	if err := l.blockStore.AddBlock(blockAndPvtdata.Block.Block); err != nil {
+	if err := l.blockStore.AddBlock(blockAndPvtdata.Block); err != nil {
 		return err
 	}
 
@@ -666,7 +629,7 @@ func (l *kvLedger) GetMissingPvtDataInfoForMostRecentBlocks(maxBlock int) (ledge
 	return l.pvtdataStore.GetMissingPvtDataInfoForMostRecentBlocks(maxBlock)
 }
 
-func (l *kvLedger) addBlockCommitHash(block *cached.Block, updateBatchBytes []byte) {
+func (l *kvLedger) addBlockCommitHash(block *common.Block, updateBatchBytes []byte) {
 	var valueBytes []byte
 
 	txValidationCode := block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER]
@@ -697,7 +660,7 @@ func (l *kvLedger) GetPvtDataAndBlockByNum(blockNum uint64, filter ledger.PvtNsC
 		return nil, err
 	}
 
-	return &ledger.BlockAndPvtData{Block: cached.WrapBlock(block), PvtData: constructPvtdataMap(pvtdata)}, nil
+	return &ledger.BlockAndPvtData{Block: block, PvtData: constructPvtdataMap(pvtdata)}, nil
 }
 
 // GetPvtDataByNum returns only the pvt data  corresponding to the given block number

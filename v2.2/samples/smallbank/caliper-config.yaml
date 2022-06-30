@@ -1,0 +1,49 @@
+# Copyright Xilinx Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# This file contains the project and benchmark config for Caliper.
+
+caliper:
+  flow:
+    skip:
+      install: true
+      init: true
+  txupdatetime: 5000  # msecs (probably affects the rate control)
+
+test:
+  name: smallbank
+  description: This is smallbank benchmark for Caliper.
+  workers:
+    type: local
+    number: 4
+  rounds:
+  - label: randomtransactions
+    txNumber: 3000
+    rateControl:
+      type: fixed-rate
+      opts:
+        tps: 500
+    arguments:
+      # This is the number of accounts created by a worker during its init phase.
+      # This is in addition to the (txNumber / workers) number of transactions sent by the worker.
+      accounts: 400
+      txnPerBatch: 250  # number of txs to send in a single benchmark callback.
+    callback: workload.js
+
+observer:
+  interval: 5  # secs
+  type: local
+monitor:
+  type:
+    - docker
+  docker:
+    name:
+    - http://127.0.0.1:2375/orderer0.example.com
+    - http://127.0.0.1:2375/ca.org1.example.com
+    - http://127.0.0.1:2375/ca.org2.example.com
+    - http://127.0.0.1:2375/peer0.org1.example.com
+    - http://127.0.0.1:2375/peer1.org1.example.com
+    - http://127.0.0.1:2375/peer0.org2.example.com
+    - http://127.0.0.1:2375/peer1.org2.example.com
+  interval: 1  # secs
