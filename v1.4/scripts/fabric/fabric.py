@@ -18,6 +18,7 @@ import subprocess
 import sys
 
 FABRIC_VERSION = ''
+FABRIC_MAJOR_VERSION = ''
 FABRIC_CA_VERSION = ''
 FABRIC_BASEIMAGE_VERSION = ''
 
@@ -47,7 +48,7 @@ def get_ssh_key(vm):
 # Returns:
 #   a string containing the output of the command
 def run_cmd(cmd, num_tries):
-    print("=== Running cmd ===")
+    print("=== Running cmd {0} ===".format(cmd))
     ret = 0
     for i in range(num_tries):
         # Stream the output of the command to console while its running.
@@ -106,8 +107,8 @@ def extract_docker_swarm_join_cmd(text):
 # Returns:
 #   a string representing the 'docker swarm join ...' command (for other VMs)
 def start_master_vm(vm, hostname, port, docker_compose_file, dockers):
-    env_vars = 'FABRIC_VERSION={0} FABRIC_CA_VERSION={1} FABRIC_BASEIMAGE_VERSION={2}'.format(
-        FABRIC_VERSION, FABRIC_CA_VERSION, FABRIC_BASEIMAGE_VERSION)
+    env_vars = 'FABRIC_VERSION={0} FABRIC_MAJOR_VERSION={1} FABRIC_CA_VERSION={2} FABRIC_BASEIMAGE_VERSION={3}'.format(
+        FABRIC_VERSION, FABRIC_MAJOR_VERSION, FABRIC_CA_VERSION, FABRIC_BASEIMAGE_VERSION)
     if vm == 'localhost':
         ssh_cmd = ''
         script_cmd = '{script_dir}/start-master-dockers.sh "{file}" "{dockers}"'.format(
@@ -131,8 +132,8 @@ def start_master_vm(vm, hostname, port, docker_compose_file, dockers):
 # Returns:
 #   a string containing the output of the ssh operation
 def start_slave_vm(vm, hostname, port, docker_swarm_join_cmd, docker_compose_file, dockers):
-    env_vars = 'FABRIC_VERSION={0} FABRIC_CA_VERSION={1} FABRIC_BASEIMAGE_VERSION={2}'.format(
-        FABRIC_VERSION, FABRIC_CA_VERSION, FABRIC_BASEIMAGE_VERSION)
+    env_vars = 'FABRIC_VERSION={0} FABRIC_MAJOR_VERSION={1} FABRIC_CA_VERSION={2} FABRIC_BASEIMAGE_VERSION={3}'.format(
+        FABRIC_VERSION, FABRIC_MAJOR_VERSION, FABRIC_CA_VERSION, FABRIC_BASEIMAGE_VERSION)
     if vm == 'localhost':
         ssh_cmd = ''
         script_cmd = '{script_dir}/start-slave-dockers.sh "{swarm_cmd}" "{file}" "{dockers}"'.format(
@@ -219,6 +220,22 @@ def get_network(network_file, vms):
                 network.append({'name': words[0], 'ip': vms[words[0]]['ip'], 'dockers': words[1]})
     return network
 
+
+# Extracts fabric major version from the provided input.
+# For example, it will return 1.4.5 when the input is amd-1.4.5-snapshot-xyz or 1.4.5.
+# Arguments:
+#   version (string): fabric complete version
+#
+# Returns:
+#   fabric major version as a string
+def extract_fabric_version(version):
+    tmp = version.split('-')
+    if len(tmp) == 1:
+        return tmp[0]
+    else:
+        return tmp[1]
+
+
 if __name__ == '__main__':
     SCRIPT_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 
@@ -244,6 +261,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', type=str, dest='output_dir', action='store', help='Path to output directory.')
     args = parser.parse_args()
     FABRIC_VERSION = args.fabric_version
+    FABRIC_MAJOR_VERSION= extract_fabric_version(args.fabric_version)
     FABRIC_CA_VERSION = args.fabric_ca_version
     FABRIC_BASEIMAGE_VERSION = args.fabric_baseimage_version
     HOST_USERNAME = args.host_username
