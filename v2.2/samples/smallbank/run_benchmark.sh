@@ -9,7 +9,7 @@
 set -e
 
 scripts_dir=$(realpath ../../scripts/fabric)
-caliper_dir=$(realpath ../../caliper-cli)
+caliper_cli_dir=$(realpath ../../caliper-cli)
 benchmark_dir=$(realpath .)
 benchmark=$(basename $benchmark_dir)
 
@@ -48,7 +48,7 @@ $scripts_dir/chaincode.sh -i -c mychannel "Org1MSP:peer0.org1.example.com Org2MS
 echo "================================================="
 echo "Running $benchmark benchmark using Caliper CLI ..."
 echo "================================================="
-cd $caliper_dir
+cd $caliper_cli_dir
 npx caliper launch master --caliper-workspace=$benchmark_dir \
     --caliper-projectconfig=caliper-config.yaml --caliper-benchconfig=caliper-config.yaml \
     --caliper-networkconfig=caliper-fabric-config.yaml

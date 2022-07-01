@@ -59,8 +59,8 @@ caliper_version=0.3.2
 echo "================================================="
 echo "Installing Caliper CLI ${caliper_version} ..."
 echo "================================================="
-caliper_dir=$(realpath ../../caliper-cli)
-mkdir -p $caliper_dir && cd $caliper_dir
+caliper_cli_dir=$(realpath ../../caliper-cli)
+mkdir -p $caliper_cli_dir && cd $caliper_cli_dir
 npm init -y
 npm install --only=prod @hyperledger/caliper-cli@${caliper_version}
 npx caliper bind --caliper-bind-sut fabric:1.4.5
