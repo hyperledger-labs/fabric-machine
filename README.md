@@ -15,6 +15,11 @@ This repo provides a proof-of-concept implementation and is not meant for produc
 ## How to Use
 We support Hyperledger Fabric v1.4 and v2.2, so check the README files in their corresponding directories on how to use this repo.
 
+## Citation
+Please use the following citation when referring to this work:
+
+H. Javaid, J. Yang, N. Santoso, M. Upadhyay, S. Mohan, C. Hu, G. Brebner, &ldquo;Blockchain Machine: A Network-Attached Hardware Accelerator for Hyperledger Fabric&rdquo;, in 42nd IEEE International Conference on Distributed Computing Systems (ICDCS), 2022.
+
 ## Publications
 - [[Talk](https://wiki.hyperledger.org/display/PSWG/PSWG+July+27%2C+2021)] H. Javaid. 2021. _Blockchain Machine: Accelerating Validation Bottlenecks in Hyperledger Fabric_. Hyperledger Performance and Scale Working Group.
 - [[Paper](http://arxiv.org/abs/2104.06968)] H. Javaid, J. Yang, N. Santoso, M. Upadhyay, S. Mohan, C. Hu, G. Brebner. 2021. _Blockchain Machine: A Network-Attached Hardware Accelerator for Hyperledger Fabric_. arXiv:2104.06968.
