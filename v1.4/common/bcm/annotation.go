@@ -26,9 +26,9 @@ type AnnotationLocator struct {
 }
 
 type Annotation struct {
-	DataType uint8
-	Offset   uint16
-	Desc     uint16 // desc/len
+	dataType uint8
+	offset   uint16
+	desc     uint16 // desc/len
 	//data uint32
 }
 
@@ -92,7 +92,7 @@ var blockTransactionAnnotationInfoList []AnnotationInfo = []AnnotationInfo{
 	// transaction start
 	{ANNOTATION_TYPE_POINTER | ANNOTATION_DATA_TYPE_TX_START, []int{1, 2}},
 	// transaction id
-	{ANNOTATION_TYPE_POINTER|ANNOTATION_DATA_TYPE_TX_ID, []int{1, 1, 1, 1, 5}}, //not required by hw accelerator
+	// {ANNOTATION_TYPE_POINTER|ANNOTATION_DATA_TYPE_TX_ID, []int{1, 1, 1, 1, 5}}, //not required by hw accelerator
 	// Chaincode name
 	{ANNOTATION_TYPE_POINTER | ANNOTATION_DATA_TYPE_CHAINCODE_NAME, []int{1, 1, 1, 1, 7, 2, 2}},
 	// Creater CA/identity
@@ -142,26 +142,26 @@ func makeAnnotation(dataType uint8, offset uint16, desc uint16) (annotation Anno
 }
 
 func getAnnotationDesc(annotation Annotation) (desc uint16) {
-	desc = annotation.Desc
+	desc = annotation.desc
 	return desc
 }
 
 func getAnnotationOffset(annotation Annotation) (offset uint16) {
-	offset = annotation.Offset
+	offset = annotation.offset
 	return offset
 }
 
 func getAnnotationDataType(annotation Annotation) (dataType uint8) {
-	dataType = annotation.DataType
+	dataType = annotation.dataType
 	return dataType
 }
 
 func setAnnotationDesc(annotation *Annotation, desc uint16) {
-	annotation.Desc = desc
+	annotation.desc = desc
 }
 
 func setAnnotationOffset(annotation *Annotation, offset uint16) {
-	annotation.Offset = offset
+	annotation.offset = offset
 }
 
 // annotationListToBytes serializes annotations to big endian
@@ -353,32 +353,4 @@ func generateCertificateUpdateAnnotation(id int, name string, ca []byte) (payloa
 		}
 	}
 	return payload, annotations
-}
-
-
-func recoverDataBasedOnLocator(data []byte, annotations []Annotation) (raw []byte) {
-	// Keep original position/length
-	start := 0
-	end := 0
-
-	// search Locator
-	var ret []byte
-	for i := 0; i < len(annotations); i++ {
-		atype := getAnnotationDataType(annotations[i])
-		if atype == 0 {
-			continue
-		} else if atype&ANNOTATION_TYPE_MASK == ANNOTATION_TYPE_LOCATOR {
-			id := int(getAnnotationDesc(annotations[i]))
-			//id := getCertificateId(data[pos+int(getAnnotationOffset(annotations[i])) : pos+int(getAnnotationOffset(annotation[i])+getAnnotationDesc(annotation[i]))])
-			end = int(getAnnotationOffset(annotations[i]))
-			ret = append(ret, data[start:end]...)
-			ret = append(ret, getCertificateById(id)...)
-			start = end 
-		}
-	}
-	end = len(data)
-	if start != end {
-		ret = append(ret, data[start:end]...)
-	}
-	return ret
 }

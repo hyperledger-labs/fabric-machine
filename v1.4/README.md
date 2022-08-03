@@ -41,7 +41,7 @@ git clone https://github.com/hyperledger-labs/fabric-machine.git
 cp -rf fabric-machine/v1.4/* fabric/.
 cd fabric
 ```
- 
+
 To install the prerequisites, run the following from the ``fabric`` directory. Afterwards, reopen the terminal for the environment variables to take effect:
 ```
 cd scripts/vm
@@ -50,16 +50,16 @@ cd scripts/vm
 
 To compile the Fabric code and create dockers, run the following from the ``fabric`` directory:
 ```
-# One-time setup (assumes Go paths as mentioned above)
-dep ensure
-go get -u github.com/golang/dep
-
 # Ignore errors from make *-clean commands which are reported when there are no docker images to clean
 # orderer image
 make orderer-docker-clean && make orderer-docker
 
 # peer related images
 make peer-docker-clean && make peer-docker
+
+# One-time setup (used by peer during installation of chaincode)
+docker pull hyperledger/fabric-ccenv:1.4.5 && docker tag hyperledger/fabric-ccenv:1.4.5 hyperledger/fabric-ccenv:latest
+
 ```
 
 ## Smallbank Benchmark (Software-only Setup)
@@ -79,7 +79,7 @@ If you want to set up the benchmark from scratch by cleaning the working directo
 ```
 
 ## Expected Output
-The script will print statistics for each of the peers in Fabric network. The most important metric reported is the commit latency/throughput with and without ledger_write operation. Since ledger_write operation is executed in software in both vanilla Fabric peer and Fabric Machine peer, a direct comparison should be between commit latency/throughput without ledger_write operation. For example, in the sample output below, we observe a huge improvement in commit throughput with Fabric Machine peer (18,220 tps vs 1,019 tps). 
+The script will print statistics for each of the peers in Fabric network. The most important metric reported is the commit latency/throughput with and without ledger_write operation. Since ledger_write operation is executed in software in both vanilla Fabric peer and Fabric Machine peer, a direct comparison should be between commit latency/throughput without ledger_write operation. For example, in the sample output below, we observe a huge improvement in commit throughput with Fabric Machine peer (18,220 tps vs 1,019 tps).
 
 ```
 INFO: peer0.org1.example.com -- transactions (succeeded/total) = 1830/2028
@@ -102,6 +102,6 @@ To setup a Fabric Machine peer, you will need the following hardware setup:
 - A direct 100G connection between server1 and server2, or the connection can be through a 100G switch (use port0 of Alveo U250 card which is the top QSFP port away from the PCIe slot)
 - A USB/JTAG cable from server1 to Alveo U250 FPGA card (used for programming the FPGA card)
 
-The FPGA card in server2 needs to be programmed with a bitstream generated from Fabric Machine hardware. Server1 will run the orderer while server2 will run the Fabric Machine peer, so server1 will send blocks to server2. 
+The FPGA card in server2 needs to be programmed with a bitstream generated from Fabric Machine hardware. Server1 will run the orderer while server2 will run the Fabric Machine peer, so server1 will send blocks to server2.
 
 Please reach out to us for the bitstream and more details on/help with this setup. We plan to make this setup available in [Heterogeneous Accelerated Compute Cluster (HACC) at National University of Singapore (NUS)](https://xilinx.github.io/xacc/nus.html) so that the community can try Fabric Machine peer with ease. Stay tuned for more updates!
