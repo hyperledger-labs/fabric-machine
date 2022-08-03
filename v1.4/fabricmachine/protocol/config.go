@@ -1,9 +1,10 @@
 /*
 Copyright Xilinx Inc. All Rights Reserved.
+
 SPDX-License-Identifier: Apache-2.0
 */
 
-package bcm
+package fmprotocol
 
 import (
 	"github.com/spf13/viper"
