@@ -25,8 +25,13 @@ const (
 
 	kUlRstRegAddr        = uint32(0x14) // User logic reset register.
 	kShellVersionRegAddr = uint32(0x0)
-	kFmVersionRegAddr    = uint32(0x20000)
-	kResRegsAddr         = uint32(0x10000)
+
+	// The following setup is for OpenNIC v1.0.
+	// For earlier versions of OpenNIC, use:
+	//   kFmVersionRegAddr = uint32(0x20000)
+	//   kResRegsAddr      = uint32(0x10000)
+	kFmVersionRegAddr = uint32(0x50000)
+	kResRegsAddr      = uint32(0x40000)
 
 	kUlRstVal = uint32(0xFFFFFFFF)
 )
