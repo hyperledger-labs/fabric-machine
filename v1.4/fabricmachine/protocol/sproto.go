@@ -4,7 +4,7 @@ Copyright Xilinx Inc. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package bcm
+package fmprotocol
 
 // getVarint reads a varint value from data position, return the value and next data position
 func getVarint(data []byte, pos int) (val int, off int) {

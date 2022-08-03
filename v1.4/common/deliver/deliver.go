@@ -15,13 +15,13 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric/common/bcm"
 	"github.com/hyperledger/fabric/common/crypto"
 	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/hyperledger/fabric/common/ledger/blockledger"
 	"github.com/hyperledger/fabric/common/policies"
 	"github.com/hyperledger/fabric/common/util"
 	"github.com/hyperledger/fabric/core/comm"
+	"github.com/hyperledger/fabric/fabricmachine/protocol"
 	cb "github.com/hyperledger/fabric/protos/common"
 	ab "github.com/hyperledger/fabric/protos/orderer"
 	"github.com/hyperledger/fabric/protos/utils"
@@ -341,8 +341,8 @@ func (h *Handler) deliverBlocks(ctx context.Context, srv *Server, envelope *cb.E
 
 		logger.Debugf("[channel: %s] Delivering block [%d] for (%p) for %s", chdr.ChannelId, block.Header.Number, seekInfo, addr)
 
-		// send block to hardware using bcm protocol
-		bcm.SendToHardware(ctx, block)
+		// send block to hardware using Fabric machine protocol
+		fmprotocol.SendToHardware(ctx, block)
 
 		if err := srv.SendBlockResponse(block); err != nil {
 			logger.Warningf("[channel: %s] Error sending to %s: %s", chdr.ChannelId, addr, err)
