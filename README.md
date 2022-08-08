@@ -26,9 +26,12 @@ H. Javaid, J. Yang, N. Santoso, M. Upadhyay, S. Mohan, C. Hu, G. Brebner, &ldquo
 - [[Talk](https://www.youtube.com/watch?v=GoOYO_ju7mA)] H. Javaid. 2020. _Hyperledger Performance Improvements (Presentation, Demo and Discussion)_. Hyperledger Sydney Meetup.
 - [[Talk](https://www.youtube.com/watch?v=Nidw6zMR4hs)] S. Mohan. 2020. _Hyperledger Performance Improvements (Demo and Discussion)_. Hyperledger San Francisco Meetup.
 
+## Maintainers
+See [MAINTAINERS.md](MAINTAINERS.md) file.
+
 ## Initial Committers
-- Ji Yang, Xilinx (https://github.com/yangji-xlnx)
-- Haris Javaid, Xilinx (https://github.com/harisj-xlnx)
+- Ji Yang, Xilinx ([@yangji-xlnx](https://github.com/yangji-xlnx))
+- Haris Javaid, Xilinx ([@harisj-xlnx](https://github.com/harisj-xlnx))
 
 ## Sponsors
 - Mark Wagner, Red Hat (mwagner@redhat.com)
