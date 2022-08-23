@@ -18,6 +18,7 @@ import shutil
 import subprocess
 import sys
 import time
+import yaml
 
 
 # Runs a command and returns its output.
@@ -286,7 +287,8 @@ def get_committer_stats(setup, config, stats_file, columns):
             s['hw_commit_throughput'] = int(s['blocksize_measured'] / s['hw_block_commit'] * 1000)
         
         if setup['verbose']:
-            print('INFO: {0} => {1}'.format(p, s))
+            print('INFO: {0} detailed statistics ...'.format(p))
+            print(yaml.dump(s))
 
     return stats
 
