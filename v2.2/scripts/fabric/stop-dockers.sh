@@ -16,7 +16,7 @@ done
 echo ""
 
 (docker stop $DOCKERS &> /dev/null || true) && (docker rm -v $DOCKERS &> /dev/null || true)
-dev_dockers=$(docker ps -a -q --filter "name=dev")
+dev_dockers=$(docker ps -a -q --filter "name=dev" --filter "name=test")
 (docker stop $dev_dockers &> /dev/null || true) && (docker rm -v $dev_dockers &> /dev/null || true)
 docker image rm $(docker image ls -q dev-*) &> /dev/null || true
 #docker volume prune --force || true

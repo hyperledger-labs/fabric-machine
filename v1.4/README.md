@@ -32,13 +32,12 @@ vagrant ssh fm-vm
 Clone the original Hyperledger Fabric repo, and then clone and merge this repo into the original one.
 ```
 mkdir -p /opt/gopath/src/github.com/hyperledger
-
 cd /opt/gopath/src/github.com/hyperledger
-git clone https://github.com/hyperledger/fabric.git
-cd fabric && git checkout 11ff991 && cd ..
 
+git clone https://github.com/hyperledger/fabric.git
 git clone https://github.com/hyperledger-labs/fabric-machine.git
-cp -rf fabric-machine/v1.4/* fabric/.
+./fabric-machine/v1.4/scripts/fabric/fabric-repo.sh -d fabric/ -s
+
 cd fabric
 ```
 
