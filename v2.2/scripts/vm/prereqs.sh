@@ -27,8 +27,10 @@ sudo apt-get install -y \
     make \
     nfs-common \
     python \
+    python-pip \
     sshfs \
     unzip
+pip install pyyaml
 
 ./install_golang.sh $VM_USER
 ./install_docker.sh $VM_USER
