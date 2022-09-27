@@ -81,25 +81,25 @@ func ExtractEnvelope(block *cb.Block, index int) (*cb.Envelope, error) {
 // IsConfigBlock validates whenever given block contains configuration
 // update transaction
 // hyperledger/fabric@v2.0/protoutil/commonutils.go
-func IsConfigBlock(block *cb.Block) bool {
+func IsConfigBlock(block *cb.Block) (bool, error) {
 	envelope, err := ExtractEnvelope(block, 0)
 	if err != nil {
-		return false
+		return false, errors.New("failed to extract envelope")
 	}
 
 	payload, err := UnmarshalPayload(envelope.Payload)
 	if err != nil {
-		return false
+		return false, errors.New("failed to unmarshal payload")
 	}
 
 	if payload.Header == nil {
-		return false
+		return false, errors.New("missing header in payload")
 	}
 
 	hdr, err := UnmarshalChannelHeader(payload.Header.ChannelHeader)
 	if err != nil {
-		return false
+		return false, errors.New("failed to unmarshal channel header")
 	}
 
-	return cb.HeaderType(hdr.Type) == cb.HeaderType_CONFIG || cb.HeaderType(hdr.Type) == cb.HeaderType_ORDERER_TRANSACTION
+	return (cb.HeaderType(hdr.Type) == cb.HeaderType_CONFIG || cb.HeaderType(hdr.Type) == cb.HeaderType_ORDERER_TRANSACTION), nil
 }

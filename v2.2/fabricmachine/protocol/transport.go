@@ -67,7 +67,7 @@ func bcmSessionSend(session BcmSession, msgType byte, annotation_data []byte, an
 		return
 	}
 
-	if length > 1500 {
+	if length > 9000 {
 		logger.Errorf("error: UDP too large")
 	} else {
 		logger.Debugf("send ok: ", len(annotation_data), len(payload), length)

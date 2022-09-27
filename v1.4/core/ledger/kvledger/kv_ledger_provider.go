@@ -70,7 +70,7 @@ func NewProvider() (ledger.PeerLedgerProvider, error) {
 			" wait for that command to complete its execution or terminate it before retrying")
 	}
 
-	if err := fmapi.InitConfig(); err != nil {
+	if err := fmapi.InitConfig(nil); err != nil {
 		return nil, err
 	}
 

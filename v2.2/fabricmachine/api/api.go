@@ -40,8 +40,10 @@ func NewFabricMachine(pcieResourceFile string) (*FabricMachine, error) {
 		return nil, err
 	}
 
-	regmap.resetSystem()
-	logger.Info("Fabric machine has been reset.")
+	if ResetFpgaCard() {
+		regmap.resetSystem()
+		logger.Info("Fabric machine has been reset.")
+	}
 	regmap.readSysVersion()
 	logger.Infof("OpenNIC build version: 0x%x Fabric machine build version: 0x%x\n", regmap.shellVersion, regmap.fmVersion)
 

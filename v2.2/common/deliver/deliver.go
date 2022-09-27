@@ -22,9 +22,9 @@ import (
 	"github.com/hyperledger/fabric/common/ledger/blockledger"
 	"github.com/hyperledger/fabric/common/policies"
 	"github.com/hyperledger/fabric/common/util"
+	"github.com/hyperledger/fabric/fabricmachine/protocol"
 	"github.com/hyperledger/fabric/internal/pkg/comm"
 	"github.com/hyperledger/fabric/protoutil"
-	"github.com/hyperledger/fabric/fabricmachine/protocol"
 	"github.com/pkg/errors"
 )
 
@@ -330,7 +330,7 @@ func (h *Handler) deliverBlocks(ctx context.Context, srv *Server, envelope *cb.E
 
 		logger.Debugf("[channel: %s] Delivering block [%d] for (%p) for %s", chdr.ChannelId, block.Header.Number, seekInfo, addr)
 
-		// send block to hardware using Fabric machine protocol
+		// Send block using Fabric machine protocol.
 		fmprotocol.SendToHardware(ctx, block)
 
 		signedData := &protoutil.SignedData{Data: envelope.Payload, Identity: shdr.Creator, Signature: envelope.Signature}

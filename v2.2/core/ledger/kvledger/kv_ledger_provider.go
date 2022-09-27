@@ -1,6 +1,5 @@
 /*
 Copyright IBM Corp. All Rights Reserved.
-Copyright Xilinx Inc. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
@@ -25,10 +24,10 @@ import (
 	"github.com/hyperledger/fabric/core/ledger/kvledger/msgs"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/privacyenabledstate"
 	"github.com/hyperledger/fabric/core/ledger/pvtdatastorage"
+	"github.com/hyperledger/fabric/fabricmachine/api"
 	"github.com/hyperledger/fabric/protoutil"
 	"github.com/pkg/errors"
 	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/hyperledger/fabric/fabricmachine/api"
 )
 
 var (
@@ -135,7 +134,7 @@ func NewProvider(initializer *ledger.Initializer) (pr *Provider, e error) {
 		return nil, err
 	}
 
-	if err := fmapi.InitConfig(); err != nil {
+	if err := fmapi.InitConfig(nil); err != nil {
 		return nil, err
 	}
 	return p, nil
