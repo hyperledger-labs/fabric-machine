@@ -62,6 +62,7 @@ services:
     - ORDERER_GENERAL_CLUSTER_LISTENPORT=8050
     - ORDERER_GENERAL_CLUSTER_SERVERCERTIFICATE=/etc/hyperledger/msp/orderer/tls/server.crt
     - ORDERER_GENERAL_CLUSTER_SERVERPRIVATEKEY=/etc/hyperledger/msp/orderer/tls/server.key
+    - ORDERER_FABRIC_HW_CONFIG_FILE=/etc/hyperledger/fabricmachine/fabric_machine.yaml
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     command: orderer
     ports:
@@ -70,7 +71,9 @@ services:
     volumes:
     - ./genesis.block:/etc/hyperledger/genesis.block
     - ./crypto-config/ordererOrganizations/example.com/orderers/orderer0.example.com/:/etc/hyperledger/msp/orderer
-    - ./fabric_machine_solo_raft.yaml:/etc/hyperledger/fabricmachine/fabric_machine.yaml
+    # The following two options are needed by Fabric Machine.
+    - ../../fabricmachine/config/fabric_machine_solo_raft.yaml:/etc/hyperledger/fabricmachine/fabric_machine.yaml
+    - ./crypto-config:/etc/hyperledger/crypto-config
     networks:
     - hlnetwork
 
@@ -121,6 +124,7 @@ services:
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/msp
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
     - CORE_PEER_GOSSIP_ORGLEADER=false
+    - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.example.com:7051
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.example.com:7051
     - CORE_PEER_VALIDATORPOOLSIZE=8
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=false
@@ -182,6 +186,7 @@ services:
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/msp
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
     - CORE_PEER_GOSSIP_ORGLEADER=false
+    - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.example.com:7051
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.example.com:7051
     - CORE_PEER_VALIDATORPOOLSIZE=8
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=false

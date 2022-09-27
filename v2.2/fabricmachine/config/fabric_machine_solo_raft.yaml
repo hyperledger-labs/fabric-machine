@@ -1,0 +1,95 @@
+# This file contains configuration for Fabric Machine peers.
+
+# Hardware configuration.
+Hardware:
+  # PCIe device corresponding to the FPGA card where Fabric Machine is implemented.
+  pcieResourceFile: /sys/devices/pci0000:00/0000:00:04.0/resource2
+  resetFpgaCard: true
+
+  # Configuration of Fabric Machine protocol.
+  protocol:
+    # IP address and port of the FPGA card (hardware address of Fabric Machine peer).
+    address: "192.55.0.54:49656"
+
+    # Orderers that can send blocks.
+    orderers:
+    - orderer.example.com
+    - orderer0.example.com
+
+    # The first block to be sent.
+    startingBlock: 1
+
+  # Enables commit to state database on CPU as well.
+  swStateDbEnabled: false
+
+# Identity roles. These are hard-coded in Fabric codebase.
+# Ids are assigned in the order below starting from 0.
+Roles:
+- admin
+- orderer
+- peer
+- client
+
+# Organizations. These are known initially from configtx.yaml file, but more can be added at runtime.
+# Ids are assigned in the order below starting from 0.
+Organizations:
+- name: OrdererMSP
+  certs:
+  - role: orderer
+    cert: /etc/hyperledger/crypto-config/ordererOrganizations/example.com/orderers/orderer0.example.com/msp/signcerts/orderer0.example.com-cert.pem
+- name: Org1MSP
+  certs:
+  - role: admin
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem
+  - role: client
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem
+  - role: peer
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/signcerts/peer0.org1.example.com-cert.pem
+  - role: peer
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp/signcerts/peer1.org1.example.com-cert.pem
+  - role: peer
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org1.example.com/peers/peer2.org1.example.com/msp/signcerts/peer2.org1.example.com-cert.pem
+- name: Org2MSP
+  certs:
+  - role: admin
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/Admin@org2.example.com-cert.pem
+  - role: client
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/signcerts/User1@org2.example.com-cert.pem
+  - role: peer
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp/signcerts/peer0.org2.example.com-cert.pem
+  - role: peer
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/msp/signcerts/peer1.org2.example.com-cert.pem
+  - role: peer
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org2.example.com/peers/peer2.org2.example.com/msp/signcerts/peer2.org2.example.com-cert.pem
+- name: Org3MSP
+  certs:
+  - role: admin
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/signcerts/Admin@org3.example.com-cert.pem
+  - role: client
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org3.example.com/users/User1@org3.example.com/msp/signcerts/User1@org3.example.com-cert.pem
+  - role: peer
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/msp/signcerts/peer0.org3.example.com-cert.pem
+  - role: peer
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org3.example.com/peers/peer1.org3.example.com/msp/signcerts/peer1.org3.example.com-cert.pem
+  - role: peer
+    cert: /etc/hyperledger/crypto-config/peerOrganizations/org3.example.com/peers/peer2.org3.example.com/msp/signcerts/peer2.org3.example.com-cert.pem
+
+# Chaincodes. These are known initially from the deployment setup/script (e.g. fabric.yaml file
+# in Caliper), but more can be added at runtime.
+# Chaincode names are converted to 64-bit right-aligned ids (e.g. lscc becomes 0000lscc), 
+# while the policy expressions are converted to Boolean expressions.
+Chaincodes:
+- name: or
+  policy: (Org1MSP.member OR Org2MSP.peer)
+- name: and
+  policy: (Org1MSP.member AND Org2MSP.peer)
+- name: comp1
+  policy: (Org1MSP.admin AND (Org2MSP.peer OR Org3MSP.member))
+
+# The lscc id is used by Fabric v1.x while lifecycle id is used by Fabric v2.x
+- name: lscc
+  policy: (Org1MSP.member OR Org2MSP.member OR Org3MSP.member)
+- name: lifecycle
+  policy: (Org1MSP.member OR Org2MSP.member OR Org3MSP.member)
+- name: smallbank
+  policy: (Org1MSP.member AND Org2MSP.member)

@@ -70,7 +70,9 @@ services:
     volumes:
     - ./genesis.block:/etc/hyperledger/genesis.block
     - ./crypto-config/ordererOrganizations/example.com/orderers/orderer0.example.com/:/etc/hyperledger/msp/orderer
-    - ./fabric_machine_solo_raft.yaml:/etc/hyperledger/fabricmachine/fabric_machine.yaml
+    # The following two options are needed by Fabric Machine.
+    - ../../fabricmachine/config/fabric_machine_solo_raft.yaml:/etc/hyperledger/fabricmachine/fabric_machine.yaml
+    - ./crypto-config:/etc/hyperledger/crypto-config
     networks:
     - hlnetwork
 

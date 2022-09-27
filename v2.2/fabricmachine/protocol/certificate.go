@@ -112,7 +112,7 @@ func getCertificateIdWithRuntimeUpdate(ca []byte) (id int) {
 func installCertificateFile(path string, id int, name string) (ret int) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		logger.Errorf("read file error")
+		logger.Errorf("cannot read from %v:%v", path, err.Error())
 		return -1
 	}
 	logger.Infof("certificate read from %s done. size = %d", path, len(data))

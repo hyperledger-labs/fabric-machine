@@ -103,12 +103,13 @@ func (v *validator) preLoadCommittedVersionOfRSet(blk *block) error {
 // validateAndPrepareBatch performs validation and prepares the batch for final writes
 func (v *validator) validateAndPrepareBatch(blk *block, doMVCCValidation bool) (*publicAndHashUpdates, error) {
 	hwEnabled := fmapi.IsEnabled()
+	hwStartingBlock := fmapi.GetStartingBlock()
 	updates := newPubAndHashUpdates()
 
 	// Skip mvcc when hardware is used since its handled in hardware.
-	// Note that block0 is the genesis block which is not handled in hardware, hence is always
-	// processed here.
-	if blk.num == 0 || !hwEnabled {
+	// Note that a few initial blocks (e.g. block0 is the genesis block) are not handled in hardware,
+	// hence are always processed here.
+	if blk.num < hwStartingBlock || !hwEnabled {
 		// Check whether statedb implements BulkOptimizable interface. For now,
 		// only CouchDB implements BulkOptimizable to reduce the number of REST
 		// API calls from peer to CouchDB instance.

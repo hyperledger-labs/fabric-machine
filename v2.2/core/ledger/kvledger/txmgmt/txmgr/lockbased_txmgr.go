@@ -196,11 +196,25 @@ func (txmgr *LockBasedTxMgr) ValidateAndPrepare(blockAndPvtdata *ledger.BlockAnd
 	// these three functions to execute parallelly.
 	logger.Debugf("Waiting for purge mgr to finish the background job of computing expirying keys for the block")
 	txmgr.pvtdataPurgeMgr.WaitForPrepareToFinish()
-	txmgr.oldBlockCommit.Lock()
+
+	block := blockAndPvtdata.Block
+	blockNum := block.Header.Number
+
+	hwEnabled := fmapi.IsEnabled()
+	hwSwStateDbEnabled := fmapi.IsSwStateDbEnabled()
+
+	// Lock can only be acquired when previous block has been committed to statedb
+	for {
+		txmgr.oldBlockCommit.Lock()
+		savepoint, _ := txmgr.GetLastSavepoint()
+		if blockNum == 0 || blockNum == (savepoint.BlockNum+1) || (hwEnabled && !hwSwStateDbEnabled) {
+			break
+		}
+		txmgr.oldBlockCommit.Unlock()
+	}
 	defer txmgr.oldBlockCommit.Unlock()
 	logger.Debug("lock acquired on oldBlockCommit for validating read set version against the committed version")
 
-	block := blockAndPvtdata.Block
 	logger.Debugf("Validating new block with num trans = [%d]", len(block.Data.Data))
 	batch, txstatsInfo, err := txmgr.commitBatchPreparer.ValidateAndPrepareBatch(blockAndPvtdata, doMVCCValidation)
 	if err != nil {
@@ -529,7 +543,8 @@ func (txmgr *LockBasedTxMgr) Commit() error {
 	logger.Debug("lock acquired on oldBlockCommit for committing regular updates to state database")
 
 	hwEnabled := fmapi.IsEnabled()
-	hwSwStateDBEnabled := fmapi.IsSwStateDBEnabled()
+	hwStartingBlock := fmapi.GetStartingBlock()
+	hwSwStateDbEnabled := fmapi.IsSwStateDbEnabled()
 
 	// When using the purge manager for the first block commit after peer start, the asynchronous function
 	// 'PrepareForExpiringKeys' is invoked in-line. However, for the subsequent blocks commits, this function is invoked
@@ -559,9 +574,9 @@ func (txmgr *LockBasedTxMgr) Commit() error {
 		return err
 	}
 
-	// State database is always written for block0 (genesis block) and when no hardware is used, or
-	// only when explicitly enabled with hardware.
-	if txmgr.current.blockNum() == 0 || !hwEnabled || hwSwStateDBEnabled {
+	// State database is always written for a few initial blocks (e.g. block0 is genesis block) and
+	// when no hardware is used, or only when explicitly enabled with hardware.
+	if txmgr.current.blockNum() < hwStartingBlock || !hwEnabled || hwSwStateDbEnabled {
 		commitHeight := version.NewHeight(txmgr.current.blockNum(), txmgr.current.maxTxNumber())
 		txmgr.commitRWLock.Lock()
 		logger.Debugf("Write lock acquired for committing updates to state database")
