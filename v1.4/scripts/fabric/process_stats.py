@@ -281,7 +281,6 @@ def get_committer_stats(setup, config, stats_file, columns):
         s['peer_commit'] = (datetime.strptime(s['end'], '%Y-%m-%d %H:%M:%S.%f') -
                            datetime.strptime(s['start'], '%Y-%m-%d %H:%M:%S.%f')).total_seconds()
         s['peer_throughput'] = int(s['transactions'] / s['peer_commit'])
-        s['block_commit_wo_ledger_write'] = s['block_commit'] - s['ledger_write']
         s['commit_throughput_wo_ledger_write'] = int(s['blocksize_measured'] / s['block_commit_wo_ledger_write'] * 1000)
         if s['hw_block_commit'] != 0.0:
             s['hw_commit_throughput'] = int(s['blocksize_measured'] / s['hw_block_commit'] * 1000)
@@ -439,8 +438,9 @@ if __name__ == '__main__':
             'mvcc_blk': 'mvcc',
             'ledger_write': '',
             'statedb_write': '',
-            'oths_blk': 'others',
+            'commit_misc': 'misc',
             'total_blk': 'block_commit',
+            'total_blk_wo_ledger_write': 'block_commit_wo_ledger_write',
             'hw_total_blk': 'hw_block_commit',
         },
         # Initial columns used when generating combined statistics.
@@ -449,7 +449,7 @@ if __name__ == '__main__':
         ],
         'combined_stats_values': [
             'blocksize_measured', 'transactions', 'succeeded_measured',
-            'vscc', 'statedb_read', 'mvcc', 'ledger_write', 'statedb_write', 'others',
+            'vscc', 'statedb_read', 'mvcc', 'ledger_write', 'statedb_write', 'misc',
             'block_commit', 'block_commit_wo_ledger_write', 'hw_block_commit', 'peer_commit',
             'commit_throughput', 'commit_throughput_wo_ledger_write', 'peer_throughput',
         ],
