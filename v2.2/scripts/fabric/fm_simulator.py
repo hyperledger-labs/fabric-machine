@@ -270,10 +270,11 @@ def write_block_info(peer_log, block_stats):
     block_num = block_stats['block']
     block_txs = block_stats['txs']
 
-    peer_log.write('.....{0} ... START Block Validation for block [{1}]\n'.format(
-        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC'), block_num))
-    peer_log.write('.....{0} ... Validated block [{1}] in 0us\n'.format(
-        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC'), block_num))
+    if block_num != 0:
+        peer_log.write('.....{0} ... Received block [{1}] from buffer\n'.format(
+            datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC'), block_num))
+        peer_log.write('.....{0} ... Validated block [{1}] in 0us\n'.format(
+            datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC'), block_num))
     peer_log.write('.....{0} ... Block [{1}] transaction validation flags: '.format(
         datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f UTC'), block_num))
 

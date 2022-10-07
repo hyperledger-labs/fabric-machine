@@ -3,100 +3,69 @@
 # Copyright Xilinx Inc. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# This program reads the log file of the peer to gather stats related to blocks and transactions.
+# This program reads peer log files to gather stats related to blocks and transactions.
 #
 # Run this utility as:
-#   ./extract_stats.py --log_files 'peer*.example.com.log'
+#   ./extract_stats.py --log-files 'peer*.example.com.log'
 
 import argparse
 import glob
 import logging
 import os
 import re
+import yaml
 
 # Global variables.
-# Creates a logger for the provided name.
-def get_logger(name):
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
-    logger = logging.getLogger(name)
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
-    return logger
-logger = get_logger('stats')
+verbose = False
 
-# Different phases of a transaction (e.g. endorse, etc.)
-phases = {
-    'commit': ['vscc', 'mvcc', 'write'],
-}
-
-# Header for stats of a transaction phase (e.g. endorse, etc.)
+# Headers for stats of various phases (e.g. endorse, etc.)
 headers = {
-    'commit': ['blk', 'txs', 'succeeded', 'start', 'end',
-        'vscc_txs', 'vscc_blk',
-        'statedb_read', 'mvcc_txs', 'mvcc_oths', 'mvcc_blk',
+    'commit': [
+        'blk', 'txs', 'succeeded', 'start', 'end',
+        'vscc_blk',
+        'statedb_read', 'mvcc_blk',
         'ledger_write', 'statedb_write',
-        'commit_oths', 'commit_blk',
-        'oths_txs', 'oths_blk', 'total_txs', 'total_blk',
-        'hw_total_blk']
+        'commit_blk', 'commit_misc',
+        'hw_total_blk',
+        'total_blk', 'total_blk_wo_ledger_write',
+    ]
 }
 
 # Regular expressions to extract various stats.
-block_commit_start_re = re.compile('(.*) UTC(.*)START Block Validation for block \[(\d+)\]')
-transaction_vscc_re = re.compile('(.*)VSCC of block (\d+) tx (\d+) took (\d+)us')
+block_commit_start_re = re.compile('(.*) UTC(.*)Received block \[(\d+)\] from buffer')
 block_vscc_re = re.compile('(.*)Validated block \[(\d+)\] in (\d+)us')
-# block_vscc_re = re.compile('(.*)Validated block \[(\d+)\] in (\d+)ms')
 block_statedb_read_re = re.compile('(.*)Bulk read of block (\d+) took (\d+)us')
-transaction_mvcc_re = re.compile('(.*)MVCC of block (\d+) tx (\d+) took (\d+)us')
-hw_commit_re = re.compile(
-    '(.*)Hardware committed block \[(\d+)\] with (\d+) transaction\(s\) in (\d+)us')
+block_mvcc_re = re.compile('(.*)Finished block \[(\d+)\] state validation in (\d+)us')
 block_txs_vld_flags_re = re.compile(
     '(.*) UTC(.*)Block \[(\d+)\] transaction validation flags: ([a-zA-Z0-9 ]+)$')
-block_commit_end_re = re.compile(
+block_hw_commit_re = re.compile(
+    '(.*)Hardware committed block \[(\d+)\] with (\d+) transaction\(s\) in (\d+)us')
+block_serial_commit_re = re.compile(
     '(.*) UTC(.*)Committed block \[(\d+)\] with (\d+) transaction\(s\) in (\d+)us ' +
     '\(state_validation=(\d+)us block_and_pvtdata_commit=(\d+)us state_commit=(\d+)us\)')
-# block_commit_end_re = re.compile(
-#     '(.*) UTC(.*)Committed block \[(\d+)\] with (\d+) transaction\(s\) in (\d+)ms ' +
-#     '\(state_validation=(\d+)ms block_and_pvtdata_commit=(\d+)ms state_commit=(\d+)ms\)')
+block_parallel_commit_re = re.compile(
+    '(.*) UTC(.*)Committed block \[(\d+)\] with (\d+) transaction\(s\) asynchronously in (\d+)us ' +
+    '\(state_validation=(\d+)us\)')
+block_ledger_write_re = re.compile('(.*) UTC(.*)Committed pvtdata and block \[(\d+)\] to ledger in (\d+)us')
+block_statedb_write_re = re.compile('(.*) UTC(.*)Committed block \[(\d+)\] to state database in (\d+)us')
 
 
-# Extracts the details of a block.
-# Arguments:
-#   line: a string containing the text
-#
-# Returns:
-#   block info as a dictionary
-def extract_block_info(stats_type, line):
-    if stats_type == 'commit':
-        match = block_commit_start_re.match(line)
-        if match:
-            return {'blk': match.group(3), 'start': match.group(1)[5:]}
-    else:
-        logger.error('Unknown stats type {0}'.format(stats_type))
-
-
-def extract_transaction_vscc_info(line):
-    match = transaction_vscc_re.match(line)
+def extract_block_commit_start_info(line):
+    match = block_commit_start_re.match(line)
     if match:
-        return {'blk': match.group(2), 'tx': match.group(3), 'vscc_txs': match.group(4)}
+        return {'blk': int(match.group(3)), 'start': match.group(1)[5:]}
 
 
 def extract_block_vscc_info(line):
     match = block_vscc_re.match(line)
     if match:
-        return {'blk': match.group(2), 'vscc_blk': match.group(3)}
+        return {'blk': int(match.group(2)), 'vscc_blk': int(match.group(3))}
 
 
 def extract_block_statedb_read_info(line):
     match = block_statedb_read_re.match(line)
     if match:
-        return {'blk': match.group(2), 'statedb_read': match.group(3)}
-
-
-def extract_transaction_mvcc_info(line):
-    match = transaction_mvcc_re.match(line)
-    if match:
-        return {'blk': match.group(2), 'tx': match.group(3), 'mvcc_txs': match.group(4)}
+        return {'blk': int(match.group(2)), 'statedb_read': int(match.group(3))}
 
 
 def extract_block_txs_vld_info(line):
@@ -107,126 +76,214 @@ def extract_block_txs_vld_info(line):
             # Convert each word representing validation flags (0xAFFFFFFB) to its integer equivalent,
             # and then count the number of 1s in its binary format.
             valid_txs += bin(int(w, 16)).count('1')
-        return {'blk': match.group(3), 'txs_vld_flags': match.group(4), 'succeeded': valid_txs} 
+        return {'blk': int(match.group(3)), 'txs_vld_flags': match.group(4), 'succeeded': int(valid_txs)} 
+
+
+def extract_block_hw_commit_info(line):
+    match = block_hw_commit_re.match(line)
+    if match:
+        return {'blk': int(match.group(2)), 'hw_total_blk': int(match.group(4))}
 
 
 def extract_block_commit_info(line):
-    match = block_commit_end_re.match(line)
+    match = block_serial_commit_re.match(line)
     if match:
-        return {'blk': match.group(3), 'end': match.group(1)[5:], 'txs': match.group(4), 'mvcc_blk': match.group(6),
-            'ledger_write': match.group(7), 'statedb_write': match.group(8), 'commit_blk': match.group(5)}
+        return {'commit_type': 'serial', 'ledger_write_done': True, 'statedb_write_done': True, 'commit_done': True,
+            'blk': int(match.group(3)), 'end': match.group(1)[5:], 'txs': int(match.group(4)),
+            'mvcc_blk': int(match.group(6)), 'ledger_write': int(match.group(7)),
+            'statedb_write': int(match.group(8)), 'commit_blk': int(match.group(5))}
 
-
-def extract_hw_commit_info(line):
-    match = hw_commit_re.match(line)
+    match = block_parallel_commit_re.match(line)
     if match:
-        return {'blk': match.group(2), 'hw_total_blk': match.group(4)}
+        return {'commit_type': 'parallel', 'commit_done': True,
+            'blk': int(match.group(3)), 'end': match.group(1)[5:], 'txs': int(match.group(4)),
+            'mvcc_blk': int(match.group(6)), 'commit_blk': int(match.group(5))}
+
+ 
+def extract_block_ledger_write_info(line):
+    match = block_ledger_write_re.match(line)
+    if match:
+        return {'ledger_write_done': True,
+            'blk': int(match.group(3)), 'end': match.group(1)[5:], 'ledger_write': int(match.group(4))}
 
 
-# Checks whether the block info matches or not.
+def extract_block_statedb_write_info(line):
+    match = block_statedb_write_re.match(line)
+    if match:
+        return {'statedb_write_done': True,
+            'blk': int(match.group(3)), 'end': match.group(1)[5:], 'statedb_write': int(match.group(4))}
+
+
+# Extracts and updates commit stats of a block.
 # Arguments:
-#   expected and actual: ints containing block numbers
+#   line: a string containing the text
+#   peer_stats: a dictionary containing stats of multiple blocks
 #
 # Returns:
-#   true or false
-def check_block(expected, actual):
-    if expected != actual:
-        logger.warning('Expected block={0} but found {1}.'.format(expected, actual))
-        return False
-    return True
+#   True if stats were extracted and updated, False otherwise.
+def extract_update_commit_stats(line, peer_stats):
+    stats = extract_block_vscc_info(line)
+    if stats:
+        update_block_stats(peer_stats, stats)
+        return True
+
+    stats = extract_block_statedb_read_info(line)
+    if stats:
+        update_block_stats(peer_stats, stats)
+        return True
+
+    stats = extract_block_hw_commit_info(line)
+    if stats:
+        update_block_stats(peer_stats, stats)
+        return True
+
+    stats = extract_block_txs_vld_info(line)
+    if stats:
+        update_block_stats(peer_stats, stats)
+        return True
+
+    stats = extract_block_commit_info(line)
+    if stats:
+        update_block_stats(peer_stats, stats)
+        return True
+
+    stats = extract_block_statedb_write_info(line)
+    if stats:
+        update_block_stats(peer_stats, stats)
+        return True
+
+    stats = extract_block_ledger_write_info(line)
+    if stats:
+        update_block_stats(peer_stats, stats)
+        return True
+
+    return False
 
 
-# Initializes the stats for a block based on the type of stats.
+# Initializes stats of a block.
 # Arguments:
 #   stats_type: type of stats
-#   stats: a dictionary containing various stats
-#   block: int containing block number
+#   peer_stats: a dictionary containing stats of multiple blocks
+#   block: a dictionary containing block info
 #
 # Returns:
-#   dictionary containing various stats
-def init_block_stats(stats_type, stats, block):
+#   None
+def init_block_stats(stats_type, peer_stats, block):
+    block_stats = {}
     for h in headers[stats_type]:
         if h == 'start' or h == 'end':
-            stats[h] = ''
+            block_stats[h] = ''
         else:
-            stats[h] = 0
-    stats['phase'] = 0
-    stats.update(block)
-    return stats
+            block_stats[h] = 0
+    block_stats['done'] = False
+    block_stats['ledger_write_done'] = False
+    block_stats['statedb_write_done'] = False
+    block_stats['commit_done'] = False
+    block_stats.update(block)
+    peer_stats[block['blk']] = block_stats
 
 
-# Extracts the stats for a block based on the type of stats.
+# Updates existing block stats with the provided stats.
+# Arguments:
+#   peer_stats: a dictionary containing stats of multiple blocks
+#   stats: a dictionary containing stats to be updated
+#
+# Returns:
+#   None
+def update_block_stats(peer_stats, stats):
+    block_stats = peer_stats[stats['blk']]
+    block_stats.update(stats)
+
+
+# Checks whether all stats of a block have been extracted.
+# Arguments:
+#   block_stats: a dictionary containing block stats
+#
+# Returns:
+#   True if all block stats are available, False otherwise.
+def all_block_stats_extracted(block_stats):
+    if block_stats['done']:
+        return True
+    else:
+        block_stats['done'] = block_stats['ledger_write_done'] & block_stats['statedb_write_done'] & block_stats['commit_done']
+        return block_stats['done']
+
+
+# Computes final stats of a block (based on extracted stats).
+# Arguments:
+#   block_stats: a dictionary containing block stats
+#
+# Returns:
+#   True if computation of final block stats succeeded, False otherwise.
+def compute_block_stats(block_stats):
+    if not all_block_stats_extracted(block_stats):
+        return False
+
+    if block_stats['commit_type'] == 'serial':
+        block_stats['mvcc_blk'] -= block_stats['statedb_read']
+        block_stats['commit_misc'] = block_stats['commit_blk'] - \
+            (block_stats['statedb_read'] + block_stats['mvcc_blk'] + \
+            block_stats['ledger_write'] + block_stats['statedb_write'])
+        block_stats['total_blk'] = block_stats['vscc_blk'] + block_stats['commit_blk']
+        block_stats['total_blk_wo_ledger_write'] = block_stats['total_blk'] - block_stats['ledger_write']
+        return True
+
+    if block_stats['commit_type'] == 'parallel':
+        block_stats['mvcc_blk'] -= block_stats['statedb_read']
+        block_stats['commit_misc'] = block_stats['commit_blk'] - \
+            (block_stats['statedb_read'] + block_stats['mvcc_blk'])
+
+        add_ledger_statedb_write = max(block_stats['ledger_write'], block_stats['statedb_write'])
+        sub_ledger_write = max(block_stats['ledger_write'] - block_stats['statedb_write'], 0)
+        block_stats['total_blk'] = block_stats['vscc_blk'] + block_stats['commit_blk'] + add_ledger_statedb_write
+        block_stats['total_blk_wo_ledger_write'] = block_stats['total_blk'] - sub_ledger_write
+        return True
+
+    return False
+
+
+# Extracts start of a block.
 # Arguments:
 #   line: a string containing the text
 #   stats_type: type of stats
-#   stats: a dictionary containing various stats
 #
 # Returns:
-#   None
-def extract_block_stats(line, stats_type, stats):
+#   block info as a dictionary or None
+def extract_block_start(line, stats_type):
     if stats_type == 'commit':
-        extract_commit_stats(line, stats)
+        return extract_block_commit_start_info(line)
     else:
-        logger.error('Unknown stats type {0}'.format(stats_type))
+        print('ERROR: Unknown stats type {0}'.format(stats_type))
 
 
-# Extracts the commit stats for a block.
+# Extracts and updates stats of a block.
 # Arguments:
 #   line: a string containing the text
-#   stats: a dictionary containing various stats
+#   stats_type: type of stats
+#   peer_stats: a dictionary containing stats of multiple blocks
 #
 # Returns:
+#   True if stats were extracted and updated, False otherwise.
+def extract_update_block_stats(line, stats_type, peer_stats):
+    if stats_type == 'commit':
+        return extract_update_commit_stats(line, peer_stats)
+    else:
+        print('ERROR: Unknown stats type {0}'.format(stats_type))
+        return False
+
+
+# Removes a block's stats.
+# Arguments:
+#   peer_stats: a dictionary containing stats of multiple blocks
+#   block_num: an int containing block number (whos stats should be removed)
+# 
+# Returns:
 #   None
-def extract_commit_stats(line, stats):
-    if stats['phase'] == 0:  # vscc phase
-        result = extract_transaction_vscc_info(line)
-        if result and check_block(stats['blk'], result['blk']):
-                stats['vscc_txs'] += int(result['vscc_txs'])
-        else:
-            result = extract_block_vscc_info(line)
-            if result and check_block(stats['blk'], result['blk']):
-                    stats['vscc_blk'] = int(result['vscc_blk'])
-                    stats['phase'] += 1  # done with vscc phase
-
-    elif stats['phase'] == 1:  # mvcc phase
-        result = extract_transaction_mvcc_info(line)
-        if result and check_block(stats['blk'], result['blk']):
-            stats['mvcc_txs'] += int(result['mvcc_txs'])
-        else:
-            result = extract_block_statedb_read_info(line)
-            if result and check_block(stats['blk'], result['blk']):
-                stats['statedb_read'] = int(result['statedb_read'])
-            else:
-                result = extract_hw_commit_info(line)
-                if result and check_block(stats['blk'], result['blk']):
-                    stats['hw_total_blk'] = int(result['hw_total_blk'])
-                else:
-                    result = extract_block_txs_vld_info(line)
-                    if result and check_block(stats['blk'], result['blk']):
-                        stats['succeeded'] = int(result['succeeded'])
-                    else:
-                        result = extract_block_commit_info(line)
-                        if result and check_block(stats['blk'], result['blk']):
-                            stats.update({k: int(v) if k != 'end' else v for k, v in result.iteritems()})
-
-                            # Calculate the rest of the stats
-                            stats['mvcc_blk'] -= stats['statedb_read']
-                            stats['mvcc_oths'] = stats['mvcc_blk'] - stats['mvcc_txs']
-                            stats['commit_oths'] = stats['commit_blk'] - \
-                                (stats['statedb_read'] + stats['mvcc_blk'] + \
-                                stats['ledger_write'] + stats['statedb_write'])
-                            stats['oths_txs'] = stats['mvcc_oths'] + stats['commit_oths']
-                            stats['oths_blk'] = stats['commit_oths']
-
-                            stats['total_txs'] = stats['vscc_blk'] + stats['statedb_read'] + \
-                                stats['mvcc_txs'] + stats['mvcc_oths'] + \
-                                stats['ledger_write'] + stats['statedb_write'] + stats['commit_oths']
-                            stats['total_blk'] = stats['vscc_blk'] + stats['commit_blk']
-
-                            stats['phase'] += 2  # done with both mvcc and write phases
+def remove_block_stats(peer_stats, block_num):
+    peer_stats.pop(block_num)
 
 
-# Formats the header line based on the type of stats.
+# Formats the header line for stats.
 # Arguments:
 #   stats_type: type of stats
 #
@@ -239,90 +296,125 @@ def format_header(stats_type):
 # Transforms the provided stats.
 # Arguments:
 #   stats_type: type of stats
-#   stats: a dictionary containing various stats
+#   stats: a dictionary containing various block stats
 #
 # Returns:
 #   None
-def transform_stats(stats_type, stats):
+def transform_block_stats(stats_type, block_stats):
     for h in headers[stats_type]:
         if h != 'blk' and h != 'txs' and h != 'succeeded' and h != 'start' and h != 'end':
-            stats[h] /= 1000.0  # microseconds to milliseconds
+            block_stats[h] /= 1000.0  # microseconds to milliseconds
 
 
 # Formats the provided stats as comma-separated stats.
 # Arguments:
 #   stats_type: type of stats
-#   stats: a dictionary containing various stats
+#   stats: a dictionary containing various block stats
 #
 # Returns:
-#   a string of comma-separated stats
-def format_stats(stats_type, stats):
+#   a string of comma-separated block stats
+def format_block_stats(stats_type, block_stats):
     values = []
     for h in headers[stats_type]:
         if h == 'blk' or h == 'txs' or h == 'succeeded' or h == 'start' or h == 'end':
-            values.append(str(stats[h]))
+            values.append(str(block_stats[h]))
         else:
-            values.append('{0:.3f}'.format(stats[h]))
+            values.append('{0:.3f}'.format(block_stats[h]))
     return ','.join(values) + '\n'
 
 
-# Extracts the stats from a peer's log file.
+# Extracts stats from peer log file.
 # Arguments:
 #   log_file: a string containing path to log file
 #
 # Returns:
 #   None
 def extract_stats_from_peer(log_file):
-    # Let's open the files and write the headers.
+    # Let's open stats files and write the headers.
+    commit_stats_file = os.path.join(os.path.dirname(log_file),
+        'committer_stats_' + os.path.splitext(os.path.basename(log_file))[0] + '.txt')
     stats_files = {
-        'commit': open(os.path.join(
-            os.path.dirname(log_file), 'committer_stats_' + os.path.splitext(os.path.basename(log_file))[0] + '.txt'), 'w'),
+        'commit': open(commit_stats_file, 'w'),
     }
+    print('INFO: peer_log_file: {0}'.format(log_file))
     for stats_type, sf in stats_files.iteritems():
+        print('INFO: {0}_stats_file: {1}'.format(stats_type, sf.name))
         sf.write(format_header(stats_type))
 
     # Let's go through the log file.
+    peer_stats = {}
+    block_to_write = None
     with open(log_file, 'r') as lf:
-        block_stats = {
-            'commit': init_block_stats('commit', {}, {}),
-        }
-
         for line in lf:
             line = line.strip()
-            
-            # TODO: This is unnecessary, but will be needed when more phases are added (e.g. endorse, etc.).
-            stats_type = 'commit'
-            stats = block_stats[stats_type]
 
-            block = extract_block_info(stats_type, line)
+            # This is unnecessary, but will be needed when more phases are added (e.g. endorse, etc.).
+            stats_type = 'commit'
+
+            block = extract_block_start(line, stats_type)
             if block:
-                logger.info('block={0}'.format(block))
-                if stats['blk']:
-                    logger.warning('Found a new block without the complete {0} stats for the previous block.'.format(stats_type))
-                # We match the stats with the most recent block, so let's discard
-                # the previous block.
-                init_block_stats(stats_type, stats, block)
+                # Found a new block, so initialize its stats (block0 is ignored).
+                block_num = block['blk']
+                if block_num == 0:
+                    continue
+                init_block_stats(stats_type, peer_stats, block)
+
+                # If it's the very first block, then initialize the variable used for writing stats.
+                if block_to_write is None:
+                    block_to_write = block_num
+
+                if verbose:
+                    print('INFO: {0}'.format(line))
+                    print(yaml.dump(peer_stats))
+
+                # Skip the remaining extraction logic since this line is already done.
                 continue
 
-            if stats['blk']:
-                extract_block_stats(line, stats_type, stats)
-                # Check whether stats for all the operations have been gathered or not.
-                if stats['phase'] == len(phases[stats_type]):
-                    transform_stats(stats_type, stats)
-                    #logger.info('block_{0}_stats={1}'.format(stats_type, stats))
-                    stats_files[stats_type].write(format_stats(stats_type, stats))
-                    init_block_stats(stats_type, stats, {})  # reset the stats
+            # Keep extracting and writing block stats after we have found the first block.
+            if block_to_write is not None:
+                if not extract_update_block_stats(line, stats_type, peer_stats):
+                    # If nothing could be extracted from this line, then skip the remaining logic.
+                    continue
 
+                if verbose:
+                    print('INFO: {0}'.format(line))
+                    print(yaml.dump(peer_stats))
+
+                # Write block stats when they are done, and release memory.
+                block_stats = peer_stats.get(block_to_write)
+                if block_stats and compute_block_stats(block_stats):
+                    if verbose:
+                        print('INFO: Going to write block{0} stats ...'.format(block_to_write))
+                        print(yaml.dump(peer_stats))
+
+                    transform_block_stats(stats_type, block_stats)
+                    stats_files[stats_type].write(format_block_stats(stats_type, block_stats))
+                    remove_block_stats(peer_stats, block_to_write)
+                    block_to_write += 1
+
+    if peer_stats:
+        print('ERROR: First block with incomplete stats ...')
+        print(yaml.dump(peer_stats[block_to_write]))
+        print('ERROR: All blocks with incomplete stats ... ')
+        for s in peer_stats.values():
+            if not s['commit_done']:
+                print(yaml.dump(s))
+        print('ERROR: Could not extract all stats for the above block(s)!!!')
+
+    # Let's close all stats files.
     for _, sf in stats_files.iteritems():
         sf.close()
+    print('')
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Extract statistics from the peer logs.')
+    parser = argparse.ArgumentParser(description='Extract statistics from peer logs.')
     parser.add_argument('--log-files', type=str, dest='log_files', action='store', help='File(s) containing peer outputs.')
+    parser.add_argument('-v', dest='verbose', action='store_true', default=None, help='Enable verbose output.')
     args = parser.parse_args()
+    verbose = args.verbose
 
     if args.log_files:
-        # Let's go through all the peer files.
+        # Let's go through the peer log files one by one.
         for f in glob.glob(args.log_files):
             extract_stats_from_peer(f)
