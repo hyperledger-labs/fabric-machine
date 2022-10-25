@@ -21,8 +21,11 @@ Please use the following citation when referring to this work:
 H. Javaid, J. Yang, N. Santoso, M. Upadhyay, S. Mohan, C. Hu, G. Brebner, &ldquo;Blockchain Machine: A Network-Attached Hardware Accelerator for Hyperledger Fabric&rdquo;, in 42nd IEEE International Conference on Distributed Computing Systems (ICDCS), 2022.
 
 ## Publications
+- [[Talk](https://www.youtube.com/watch?v=-EBqIZxpgVA)] M. Kumaraswamy, H. Javaid. 2022. _Accelerated Hyperledger Fabric for Supply Chain Applications in Semiconductor Industry_. Hyperledger Global Forum.
+- [[Paper](https://arxiv.org/abs/2210.11839)] N. Santoso, H. Javaid. 2022. _Improving Energy Efficiency of Permissioned Blockchains Using FPGAs_. Accepted at International Conference on Parallel and Distributed Systems (ICPADS).
+- [[Paper](https://ieeexplore.ieee.org/document/9912226)] H. Javaid, J. Yang, N. Santoso, M. Upadhyay, S. Mohan, C. Hu, G. Brebner. 2022. _Blockchain Machine: A Network-Attached Hardware Accelerator for Hyperledger Fabric_. International Conference on Distributed Computing Systems (ICDCS).
+- [[Paper](https://ieeexplore.ieee.org/document/9912061)] R. Agrawal, J. Yang, H. Javaid. 2022. _Efficient FPGA-based ECDSA Verification Engine for Permissioned Blockchains_. International Conference on Application-Specific Systems, Architectures and Processors (ASAP).
 - [[Talk](https://wiki.hyperledger.org/display/PSWG/PSWG+July+27%2C+2021)] H. Javaid. 2021. _Blockchain Machine: Accelerating Validation Bottlenecks in Hyperledger Fabric_. Hyperledger Performance and Scale Working Group.
-- [[Paper](http://arxiv.org/abs/2104.06968)] H. Javaid, J. Yang, N. Santoso, M. Upadhyay, S. Mohan, C. Hu, G. Brebner. 2021. _Blockchain Machine: A Network-Attached Hardware Accelerator for Hyperledger Fabric_. arXiv:2104.06968.
 - [[Talk](https://www.youtube.com/watch?v=GoOYO_ju7mA)] H. Javaid. 2020. _Hyperledger Performance Improvements (Presentation, Demo and Discussion)_. Hyperledger Sydney Meetup.
 - [[Talk](https://www.youtube.com/watch?v=Nidw6zMR4hs)] S. Mohan. 2020. _Hyperledger Performance Improvements (Demo and Discussion)_. Hyperledger San Francisco Meetup.
 
