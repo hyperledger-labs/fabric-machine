@@ -1,3 +1,7 @@
+![Status Badge](https://img.shields.io/badge/Status-archived-red)
+
+**NOTE:** This lab has been archived and is no longer being maintained.
+
 # Fabric Machine
 This project introduces Fabric Machine, an FPGA-based hardware accelerator for Hyperledger Fabric. It is based upon a more general "Blockchain Machine" hardware acceleration technology, which may be extended beyond Fabric to other Hyperledger projects in the future.
 
